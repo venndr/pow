@@ -4,9 +4,11 @@ defmodule PowResetPassword.Ecto.Context do
   alias PowResetPassword.Ecto.Schema
 
   @spec get_by_email(binary(), Config.t()) :: Context.user() | nil
-  def get_by_email(email, config), do: Operations.get_by([email: email], config)
+  def get_by_email(email, config),
+    do: Operations.get_by([email_hash: :crypto.hash(:sha512, email) |> Base.encode64()], config)
 
-  @spec update_password(Context.user(), map(), Config.t()) :: {:ok, Context.user()} | {:error, Context.changeset()}
+  @spec update_password(Context.user(), map(), Config.t()) ::
+          {:ok, Context.user()} | {:error, Context.changeset()}
   def update_password(%user_mod{} = user, params, config) do
     user
     |> user_mod.reset_password_changeset(params)

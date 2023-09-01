@@ -33,7 +33,7 @@ defmodule PowEmailConfirmation.Ecto.Schema do
   @doc false
   @impl true
   def validate!(_config, module) do
-    Schema.require_schema_field!(module, :email, PowEmailConfirmation)
+    Schema.require_schema_field!(module, :email_hash, PowEmailConfirmation)
   end
 
   @doc false
@@ -56,9 +56,12 @@ defmodule PowEmailConfirmation.Ecto.Schema do
   @impl true
   defmacro __using__(_config) do
     quote do
-      def confirm_email_changeset(changeset, attrs), do: pow_confirm_email_changeset(changeset, attrs)
+      def confirm_email_changeset(changeset, attrs),
+        do: pow_confirm_email_changeset(changeset, attrs)
 
-      defdelegate pow_confirm_email_changeset(changeset, attrs), to: unquote(__MODULE__), as: :confirm_email_changeset
+      defdelegate pow_confirm_email_changeset(changeset, attrs),
+        to: unquote(__MODULE__),
+        as: :confirm_email_changeset
 
       defoverridable confirm_email_changeset: 2
     end
@@ -96,7 +99,7 @@ defmodule PowEmailConfirmation.Ecto.Schema do
       email_changed?(changeset) ->
         current_email = changeset.data.email
         changed_email = Changeset.get_field(changeset, :email)
-        changeset     = set_unconfirmed_email(changeset, current_email, changed_email)
+        changeset = set_unconfirmed_email(changeset, current_email, changed_email)
 
         case unconfirmed_email_changed?(changeset) do
           true -> put_email_confirmation_token(changeset)
@@ -107,12 +110,13 @@ defmodule PowEmailConfirmation.Ecto.Schema do
         changeset
     end
   end
+
   def changeset(changeset, _attrs, _config), do: changeset
 
   defp built?(changeset), do: Ecto.get_meta(changeset.data, :state) == :built
 
   defp email_reverted?(changeset, attrs) do
-    param   = Map.get(attrs, :email) || Map.get(attrs, "email")
+    param = Map.get(attrs, :email) || Map.get(attrs, "email")
     current = changeset.data.email
 
     param == current
@@ -120,7 +124,7 @@ defmodule PowEmailConfirmation.Ecto.Schema do
 
   defp email_changed?(changeset) do
     case Changeset.get_change(changeset, :email) do
-      nil  -> false
+      nil -> false
       _any -> true
     end
   end
@@ -139,7 +143,7 @@ defmodule PowEmailConfirmation.Ecto.Schema do
 
   defp unconfirmed_email_changed?(changeset) do
     case Changeset.get_change(changeset, :unconfirmed_email) do
-      nil  -> false
+      nil -> false
       _any -> true
     end
   end
@@ -154,13 +158,23 @@ defmodule PowEmailConfirmation.Ecto.Schema do
   changed to this value, and `:unconfirmed_email` will be set to nil.
   """
   @spec confirm_email_changeset(Ecto.Schema.t() | Changeset.t(), map()) :: Changeset.t()
-  def confirm_email_changeset(%Changeset{data: %{unconfirmed_email: unconfirmed_email}} = changeset, params) when not is_nil(unconfirmed_email) do
+  def confirm_email_changeset(
+        %Changeset{data: %{unconfirmed_email: unconfirmed_email}} = changeset,
+        params
+      )
+      when not is_nil(unconfirmed_email) do
     confirm_email(changeset, unconfirmed_email, params)
   end
-  def confirm_email_changeset(%Changeset{data: %{email_confirmed_at: nil, email: email}} = changeset, params) do
+
+  def confirm_email_changeset(
+        %Changeset{data: %{email_confirmed_at: nil, email: email}} = changeset,
+        params
+      ) do
     confirm_email(changeset, email, params)
   end
+
   def confirm_email_changeset(%Changeset{} = changeset, _params), do: changeset
+
   def confirm_email_changeset(user, params) do
     user
     |> Changeset.change()
@@ -168,14 +182,15 @@ defmodule PowEmailConfirmation.Ecto.Schema do
   end
 
   defp confirm_email(changeset, email, _params) do
-    confirmed_at = Pow.Ecto.Schema.__timestamp_for__(changeset.data.__struct__, :email_confirmed_at)
-    changes      =
-      [
-        email_confirmed_at: confirmed_at,
-        email: email,
-        unconfirmed_email: nil,
-        email_confirmation_token: nil
-      ]
+    confirmed_at =
+      Pow.Ecto.Schema.__timestamp_for__(changeset.data.__struct__, :email_confirmed_at)
+
+    changes = [
+      email_confirmed_at: confirmed_at,
+      email: email,
+      unconfirmed_email: nil,
+      email_confirmation_token: nil
+    ]
 
     changeset
     |> Changeset.change(changes)
