@@ -169,7 +169,7 @@ defmodule Pow.Ecto.Context do
   @spec get_by(Keyword.t() | map(), Config.t()) :: user() | nil
   def get_by(clauses, config) do
     user_mod = Config.user!(config)
-    clauses  = Keyword.merge(normalize_user_id_field_value(user_mod, clauses), scope_opts(config))
+    clauses  = normalize_user_id_field_value(user_mod, clauses)
     opts     = repo_opts(config, [:prefix])
 
     Config.repo!(config).get_by(user_mod, clauses, opts)
@@ -192,12 +192,9 @@ defmodule Pow.Ecto.Context do
   @spec do_insert(changeset(), Config.t()) :: {:ok, user()} | {:error, changeset()}
   def do_insert(changeset, config) do
     opts = repo_opts(config, [:prefix])
-    scope = scope_opts(config)
+    repo = Config.repo!(config)
 
-    changeset
-    |> Ecto.Changeset.change(scope)
-    |> Config.repo!(config).insert(opts)
-    |> reload_after_write(config)
+    repo.insert(changeset, opts)
   end
 
   @doc """
@@ -208,23 +205,9 @@ defmodule Pow.Ecto.Context do
   @spec do_update(changeset(), Config.t()) :: {:ok, user()} | {:error, changeset()}
   def do_update(changeset, config) do
     opts = repo_opts(config, [:prefix])
-    scope = scope_opts(config)
+    repo = Config.repo!(config)
 
-    changeset
-    |> Ecto.Changeset.change(scope)
-    |> Config.repo!(config).update(opts)
-    |> reload_after_write(config)
-  end
-
-  defp reload_after_write({:error, _} = err, _), do: err
-
-  defp reload_after_write({:ok, struct}, config) do
-    # When ecto updates/inserts, has_many :through associations are set to nil, so need to reload
-    # when writes happen.
-    opts = repo_opts(config, [:prefix])
-    struct = Config.repo!(config).get!(struct.__struct__, struct.id, opts)
-
-    {:ok, struct}
+    repo.update(changeset, opts)
   end
 
   # TODO: Remove by 1.1.0
@@ -236,8 +219,6 @@ defmodule Pow.Ecto.Context do
     |> Config.get(:repo_opts, [])
     |> Keyword.take(opts)
   end
-
-  defp scope_opts(config), do: Config.get(config, :scope_opts, [])
 
   # TODO: Remove by 1.1.0
   @deprecated "Use `Pow.Config.user!/1` instead"
