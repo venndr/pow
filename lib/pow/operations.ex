@@ -1,6 +1,6 @@
 defmodule Pow.Operations do
   @moduledoc """
-  Operation methods that glues operation calls to context module.
+  Operation functions that glues operation calls to context module.
 
   A custom context module can be used instead of the default `Pow.Ecto.Context`
   if a `:users_context` key is passed in the configuration.
@@ -24,7 +24,7 @@ defmodule Pow.Operations do
   @doc """
   Build a changeset from existing user struct.
 
-  It'll call the `changeset/2` method on the user struct.
+  It'll call the `changeset/2` function on the user struct.
   """
   @spec changeset(map(), map(), Config.t()) :: map()
   def changeset(user, params, _config) do
@@ -108,19 +108,24 @@ defmodule Pow.Operations do
   @doc """
   Retrieve a keyword list of primary key value(s) from the provided struct.
 
-  The keys will be fetched from the `__schema__/1` method in the struct module.
-  If no `__schema__/1` method exists, then it's expected that the struct has
-  `:id` as its only primary key.
+  The keys will be fetched from the `__schema__/1` function in the struct
+  module. If no `__schema__/1` function exists, then it's expected that the
+  struct has `:id` as its only primary key.
   """
   @spec fetch_primary_key_values(struct(), Config.t()) :: {:ok, keyword()} | {:error, term()}
   def fetch_primary_key_values(%mod{} = struct, _config) do
-    mod
-    |> function_exported?(:__schema__, 1)
-    |> case do
-      true  -> mod.__schema__(:primary_key)
-      false -> [:id]
+    cond do
+      not Code.ensure_loaded?(mod) ->
+        {:error, "The module #{inspect mod} does not exist"}
+
+      function_exported?(mod, :__schema__, 1) ->
+        :primary_key
+        |> mod.__schema__()
+        |> map_primary_key_values(struct, [])
+
+      true ->
+        map_primary_key_values([:id], struct, [])
     end
-    |> map_primary_key_values(struct, [])
   end
 
   defp map_primary_key_values([], %mod{}, []), do: {:error, "No primary keys found for #{inspect mod}"}

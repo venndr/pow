@@ -1,10 +1,7 @@
+# TODO: Remove module when requiring Phoenix 1.7.0
+unless Pow.dependency_vsn_match?(:phoenix, ">= 1.7.0") do
 defmodule Pow.Phoenix.HTML.Bootstrap do
-  # TODO: Remove module by 1.1.0 and only support Phoenix 1.4.0
-
-  @moduledoc """
-  Module that helps build HTML for Phoenix with Bootstrap CSS.
-  """
-  import Pow.Phoenix.HTML.FormTemplate, only: [inspect_key: 1]
+  @moduledoc false
 
   @form_template EEx.compile_string(
     """
@@ -27,11 +24,9 @@ defmodule Pow.Phoenix.HTML.Bootstrap do
     <%% end %>
     """)
 
-  @doc """
-  Renders a form.
-  """
-  @spec render_form(list(), binary()) :: Macro.t()
-  def render_form(inputs, button_label) do
+  def render_form(inputs, opts \\ []) do
+    button_label = Keyword.get(opts, :button_label, "Submit")
+
     inputs = for {type, key} <- inputs, do: input(type, key)
 
     unquote(@form_template)
@@ -44,6 +39,9 @@ defmodule Pow.Phoenix.HTML.Bootstrap do
     {label(key), ~s(<%= password_input f, #{inspect_key(key)}, class: "form-control" %>), error(key)}
   end
 
+  defp inspect_key({:changeset, :pow_user_id_field}), do: "Pow.Ecto.Schema.user_id_field(@changeset)"
+  defp inspect_key(key), do: inspect(key)
+
   defp label(key) do
     ~s(<%= label f, #{inspect_key(key)}, class: "control-label" %>)
   end
@@ -51,4 +49,5 @@ defmodule Pow.Phoenix.HTML.Bootstrap do
   defp error(key) do
     ~s(<%= error_tag f, #{inspect_key(key)} %>)
   end
+end
 end

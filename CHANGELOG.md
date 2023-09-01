@@ -1,6 +1,107 @@
 # Changelog
 
-## v1.0.24 (TBA)
+## v1.0.32 (2023-08-30)
+
+Removed deprecation warnings for Elixir 1.15.
+
+## Bug fixes
+
+- [`Pow.Phoenix.Controller`] Now uses `Phoenix.View` when it's available with `:namespace` option to prevent upgrade issues
+
+## v1.0.31 (2023-06-09)
+
+## Bug fixes
+
+- [`Pow.Phoenix.Mailer.Mail`] Now renders html and text correctly in fallback mode for deprecated MailView
+
+## v1.0.30 (2023-04-28)
+
+### Bug fixes
+
+- [`Pow`] Ensure the dependency is loaded before matching version in `Pow.dependency_vsn_match?/2`
+
+## v1.0.29 (2023-03-21)
+
+This version is updated to work with Phoenix 1.7, in particular using the new template components structure. All views have been removed, and Pow no longer requires the `phoenix_view` dependency.
+
+Now requires Elixir 1.12+.
+
+### Enhancements
+
+* [`Pow.Phoenix.Mailer.Mail`] Revamped to conform to template component structure of Phoenix 1.7
+* [`Pow.Phoenix.Template`] Now renders Tailwind based template components on Phoenix 1.7
+
+### Deprecations
+
+* [`Pow.Phoenix.Mailer.Mail`] Deprecated `:pow_mailer_layout` in favor of `:pow_mailer_layouts`
+* [`Mix.Pow.Phoenix.Mailer`] Removed `Mix.Pow.Phoenix.Mailer.create_view_file/5`
+* [`Mix.Pow.Phoenix.Mailer`] Removed `Mix.Pow.Phoenix.Mailer.create_templates/4`
+* [`Mix.Pow.Phoenix`] Removed `Mix.Pow.Phoenix.create_view_file/4`
+
+## v1.0.28 (2023-03-17)
+
+### Enhancements
+
+* [`Mix.Pow`] `Mix.Pow.parse_options/3` now merges option defaults with `:otp_app, :generators` configuration
+* [`Mix.Pow.Mix.Tasks.Pow.Phoenix.Mailer.Gen.Templates`] Now injects `config/config.exs` and `WEB_PATH/WEB_APP.ex`
+* [`Mix.Pow.Mix.Tasks.Pow.Phoenix.Gen.Templates`] Now injects `config/config.exs`
+* [`Mix.Tasks.Pow.Phoenix.Install`] Now injects `config/config.exs`, `WEB_PATH/endpoint.ex`, and `WEB_PATH/router.ex`
+* [`Pow.Phoenix.Router`] Updated to support Phoenix 1.7 breaking changes
+* [`Pow.Phoenix.Template`] Updated to support Phoenix 1.7 verified routes
+* [`Pow.Phoenix.Routes`] Updated to support Phoenix 1.7 verified routes
+* [`Pow.Phoenix.ViewHelpers`] Updated to handle Phoenix 1.7 components layout
+
+### Bug fixes
+
+* `:phoenix` removed from the compilers
+
+### Documentation
+
+* Updated [api guide](guides/api.md) to correctly return updated `conn` for delete calls
+
+## v1.0.27 (2022-04-27)
+
+Now supports `ecto_sql` 3.8.x and requires Elixir 1.11+.
+
+### Enhancements
+
+* [`Pow.Ecto.Schema`] has been refactored to conform the `@pow_fields` and `@pow_assocs` attributes with separate migration options
+
+## v1.0.26 (2021-11-06)
+
+### Enhancemnets
+
+* [`Pow.Store.Backend.MnesiaCache.Unsplit`] The unsplit module will now initialize the Mnesia cluster when nodes are connected lazily by resetting the Mnesia schema
+
+### Bug fixes
+
+* [`Pow.Store.Backend.MnesiaCache`] Now properly handles Mnesia application start errors
+
+### Documentation
+
+* Updated [api guide](guides/api.md) to use `Plug.Conn.register_before_send/2` for token writes
+
+## v1.0.25 (2021-09-26)
+
+Now supports Phoenix 1.6.x, and `phoenix_html` 3.x.x.
+
+### Enhancements
+
+* [`Pow.Ecto.Schema.Fields`] The `:password_hash`, `:current_password`, and `:password` fields now have `redact: true` option set
+* [`Pow.Phoenix.Controller`] `Pow.Phoenix.Controller.action/3` now properly handles `{:halt, conn}` returned in the `before_process` callback
+* [`Pow.Store.Backend.EtsCache`] Now does synchronous writes unless `writes: :async` is passed in config options
+* [`Pow.Store.Backend.MnesiaCache`] Now does synchronous writes unless `writes: :async` is passed in config options
+
+### Bug fixes
+
+* [`Pow.Operations`] `Pow.Operations.fetch_primary_key_values/2` now ensures that module exists and is loaded before deriving primary keys
+
+### Documentation
+
+* Updated [redis guide](guides/redis_cache_store_backend.md) to use synchronous writes unless `writes: :async` is passed in config options
+* Updated [redis guide](guides/redis_cache_store_backend.md) to use optimized lookups with sorted keys
+
+## v1.0.24 (2021-05-27)
 
 ### Enhancements
 

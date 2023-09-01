@@ -48,7 +48,7 @@ defmodule Pow.Test.ExtensionMocks do
 
     __user_schema__(context_module, extensions)
     __phoenix_endpoint__(web_module, config, opts)
-    __phoenix_views__(web_module)
+    __phoenix_layouts__(web_module)
     __conn_case__(web_module, cache_backend)
     __messages__(web_module, extensions)
     __routes__(web_module)
@@ -88,7 +88,7 @@ defmodule Pow.Test.ExtensionMocks do
   def __phoenix_endpoint__(web_module, config, opts) do
     module = Module.concat([web_module, Phoenix.Router])
     quoted = quote do
-      use Phoenix.Router
+      use Phoenix.Router, helpers: false
       use Pow.Phoenix.Router
       use Pow.Extension.Phoenix.Router, unquote(config)
 
@@ -165,12 +165,16 @@ defmodule Pow.Test.ExtensionMocks do
       using do
         quote do
           import Plug.Conn
-          import Phoenix.ConnTest
+          import Phoenix.ConnTest, except: [get_flash: 2]
+          import Pow.Test.Phoenix.ConnCase, only: [get_flash: 2]
           import ControllerAssertions
 
-          alias Router.Helpers, as: Routes
-
           @endpoint Endpoint
+
+          use Phoenix.VerifiedRoutes,
+            endpoint: Endpoint,
+            router: Router,
+            statics: ~w()
         end
       end
 
@@ -183,10 +187,12 @@ defmodule Pow.Test.ExtensionMocks do
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
-  def __phoenix_views__(web_module) do
-    module = Module.concat([web_module, Phoenix.LayoutView])
+  def __phoenix_layouts__(web_module) do
+    module = Module.concat([web_module, Phoenix.Layouts])
     quoted = quote do
-      use Pow.Test.Phoenix.Web, :view
+      use Pow.Test.Phoenix.Web, :html
+
+      embed_templates "../phoenix/components/layouts/*.html"
     end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))

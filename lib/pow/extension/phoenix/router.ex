@@ -7,7 +7,7 @@ defmodule Pow.Extension.Phoenix.Router do
   Configure `lib/my_project_web/router.ex` the following way:
 
       defmodule MyAppWeb.Router do
-        use Phoenix.Router
+        use MyAppWeb, :router
         use Pow.Phoenix.Router
         use Pow.Extension.Phoenix.Router,
           extensions: [PowExtensionOne, PowExtensionTwo]
@@ -72,7 +72,7 @@ defmodule Pow.Extension.Phoenix.Router do
   end
 
   @doc """
-  A macro that will call the router method in all extension router modules.
+  A macro that will call the routes function in all extension router modules.
   """
   defmacro pow_extension_routes do
     router_module(__CALLER__.module).routes()

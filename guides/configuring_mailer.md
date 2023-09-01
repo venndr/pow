@@ -13,7 +13,7 @@ integrate them with Pow.
 
 ## Swoosh mailer
 
-Set up your `WEB_PATH/pow/mailer.ex` file like so:
+Set up your `WEB_PATH/mails/pow_mailer.ex` file like so:
 
 ```elixir
 defmodule MyAppWeb.Pow.Mailer do
@@ -50,7 +50,7 @@ defmodule MyAppWeb.Pow.Mailer do
   end
 
   defp log_warnings({:error, reason}) do
-    Logger.warn("Mailer backend failed with: #{inspect(reason)}")
+    Logger.warning("Mailer backend failed with: #{inspect(reason)}")
   end
 
   defp log_warnings({:ok, response}), do: {:ok, response}
@@ -74,7 +74,7 @@ config :my_app, MyAppWeb.Pow.Mailer,
 
 ## Bamboo mailer
 
-Set up your `WEB_PATH/pow/mailer.ex` file like so:
+Set up your `WEB_PATH/mails/pow_mailer.ex` file like so:
 
 ```elixir
 defmodule MyAppWeb.Pow.Mailer do

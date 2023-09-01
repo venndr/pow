@@ -1,16 +1,16 @@
 defmodule Pow.MixProject do
   use Mix.Project
 
-  @version "1.0.23"
+  @version "1.0.32"
 
   def project do
     [
       app: :pow,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      compilers: [:phoenix] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       deps: deps(),
       xref: [exclude: [:mnesia]],
 
@@ -26,7 +26,7 @@ defmodule Pow.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :mnesia],
       mod: {Pow.Application, []}
     ]
   end
@@ -34,19 +34,21 @@ defmodule Pow.MixProject do
   defp deps do
     [
       {:ecto, "~> 2.2 or ~> 3.0"},
-      {:phoenix, ">= 1.3.0 and < 1.6.0"},
-      {:phoenix_html, ">= 2.0.0 and <= 3.0.0"},
+      {:phoenix, ">= 1.3.0 and < 1.8.0"},
+      {:phoenix_html, ">= 2.0.0 and < 4.0.0"},
       {:plug, ">= 1.5.0 and < 2.0.0", optional: true},
+      {:phoenix_live_view, ">= 0.18.0", optional: true},
 
-      {:phoenix_ecto, "~> 4.2", only: [:dev, :test]},
+      {:phoenix_ecto, "~> 4.3", only: [:dev, :test]},
       {:credo, "~> 1.5", only: [:dev, :test]},
       {:jason, "~> 1.2", only: [:dev, :test]}, # Credo requires jason to exist also in :dev
 
-      {:ex_doc, "~> 0.23", only: :dev},
+      {:ex_doc, "~> 0.25", only: :dev},
 
       {:ecto_sql, "~> 3.5", only: [:test]},
       {:plug_cowboy, "~> 2.4", only: [:test]},
-      {:postgrex, "~> 0.15", only: [:test]}
+      {:postgrex, "~> 0.15", only: [:test]},
+      {:floki, ">= 0.30.0", only: :test}
     ]
   end
 
@@ -55,9 +57,12 @@ defmodule Pow.MixProject do
 
   defp package do
     [
-      maintainers: ["Dan Shultzer"],
+      maintainers: ["Dan Schultzer"],
       licenses: ["MIT"],
-      links: %{github: "https://github.com/danschultzer/pow"},
+      links: %{
+        "GitHub" => "https://github.com/pow-auth/pow",
+        "Sponsor" => "https://github.com/sponsors/danschultzer"
+      },
       files: ~w(lib LICENSE mix.exs README.md)
     ]
   end
@@ -68,7 +73,7 @@ defmodule Pow.MixProject do
       source_ref: "v#{@version}",
       main: "README",
       canonical: "http://hexdocs.pm/pow",
-      source_url: "https://github.com/danschultzer/pow",
+      source_url: "https://github.com/pow-auth/pow",
       logo: "assets/logo.svg",
       assets: "assets",
       extras: [
@@ -78,7 +83,6 @@ defmodule Pow.MixProject do
         "guides/why_pow.md": [],
         "guides/production_checklist.md": [],
         "guides/security_practices.md": [],
-        "guides/coherence_migration.md": [],
         "guides/configuring_mailer.md": [],
         "guides/user_roles.md": [],
         "guides/lock_users.md": [],

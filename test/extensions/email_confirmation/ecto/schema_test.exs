@@ -8,12 +8,14 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
   @password     "secret1234"
   @valid_params %{email: "test@example.com", password: @password, password_confirmation: @password, current_password: @password}
 
-  defmodule OverridenMethodsUser do
+  defmodule OverridenChangesetUser do
     @moduledoc false
     use Ecto.Schema
     use Pow.Ecto.Schema
     use Pow.Extension.Ecto.Schema,
       extensions: [PowEmailConfirmation]
+
+    @ecto_derive_inspect_for_redacted_fields false
 
     schema "users" do
       pow_user_fields()
@@ -189,17 +191,17 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
       assert changeset.changes == %{}
     end
 
-    test "with overridden method" do
+    test "with overridden changeset" do
       {:ok, user} =
-        %OverridenMethodsUser{}
-        |> OverridenMethodsUser.changeset(@valid_params)
+        %OverridenChangesetUser{}
+        |> OverridenChangesetUser.changeset(@valid_params)
         |> RepoMock.insert([])
 
-      changeset = OverridenMethodsUser.confirm_email_changeset(user, %{})
+      changeset = OverridenChangesetUser.confirm_email_changeset(user, %{})
 
       refute changeset.valid?
 
-      changeset = OverridenMethodsUser.confirm_email_changeset(user, %{"current_password" => @password})
+      changeset = OverridenChangesetUser.confirm_email_changeset(user, %{"current_password" => @password})
 
       assert changeset.valid?
     end

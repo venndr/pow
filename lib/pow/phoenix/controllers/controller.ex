@@ -33,8 +33,16 @@ defmodule Pow.Phoenix.Controller do
   @doc false
   defmacro __using__(config) do
     quote do
-      use Phoenix.Controller,
-        namespace: Pow.Phoenix
+      use Phoenix.Controller, (
+        # TODO: Remove when Phoenix 1.7 is required
+        if Code.ensure_loaded?(Phoenix.View) do
+          [namespace: Pow.Phoenix]
+        else
+          [
+            layouts: [html: Pow.Phoenix.Layouts],
+            formats: [:html]
+          ]
+        end)
 
       import unquote(__MODULE__), only: [require_authenticated: 2, require_not_authenticated: 2, put_no_cache_header: 2]
 
@@ -44,12 +52,12 @@ defmodule Pow.Phoenix.Controller do
 
       defp pow_layout(conn, _config), do: ViewHelpers.layout(conn)
 
-      unquote(__MODULE__).__define_helper_methods__()
+      unquote(__MODULE__).__define_helper_functions__()
     end
   end
 
   @doc false
-  defmacro __define_helper_methods__ do
+  defmacro __define_helper_functions__ do
     quote do
       def messages(conn), do: unquote(__MODULE__).messages(conn, Messages)
 
@@ -68,8 +76,8 @@ defmodule Pow.Phoenix.Controller do
   """
   @spec action(atom(), Conn.t(), map()) :: Conn.t()
   def action(controller, %{private: private} = conn, params) do
-    action    = private.phoenix_action
-    config    = Plug.fetch_config(conn)
+    action = private.phoenix_action
+    config = Plug.fetch_config(conn)
     callbacks = Config.get(config, :controller_callbacks)
 
     conn
@@ -79,6 +87,7 @@ defmodule Pow.Phoenix.Controller do
     |> respond_action(controller, action)
   end
 
+  defp process_action({:halt, conn}, _controller, _action, _params), do: {:halt, conn}
   defp process_action(conn, controller, action, params) do
     apply(controller, String.to_atom("process_#{action}"), [conn, params])
   end
@@ -88,6 +97,8 @@ defmodule Pow.Phoenix.Controller do
     apply(controller, String.to_atom("respond_#{action}"), [results])
   end
 
+  defp maybe_callback({:halt, conn}, _callbacks, _hook, _controller, _action, _config),
+    do: {:halt, conn}
   defp maybe_callback(results, nil, _hook, _controller, _action, _config), do: results
   defp maybe_callback(results, callbacks, hook, controller, action, config) do
     apply(callbacks, hook, [controller, action, results, config])
@@ -111,15 +122,6 @@ defmodule Pow.Phoenix.Controller do
     conn
     |> Plug.fetch_config()
     |> Config.get(:routes_backend, fallback)
-  end
-
-  @spec route_helper(atom()) :: binary()
-  def route_helper(plug) do
-    as             = Phoenix.Naming.resource_name(plug, "Controller")
-    [base | _rest] = Module.split(plug)
-    base           = Macro.underscore(base)
-
-    "#{base}_#{as}"
   end
 
   @doc """
@@ -164,5 +166,15 @@ defmodule Pow.Phoenix.Controller do
       @default_cache_control_header -> Conn.put_resp_header(conn, "cache-control", @no_cache_control_header)
       _any                          -> conn
     end
+  end
+
+  # TODO: Remove when Phoenix 1.7 is required
+  @spec route_helper(atom()) :: binary()
+  def route_helper(plug) do
+    as             = Phoenix.Naming.resource_name(plug, "Controller")
+    [base | _rest] = Module.split(plug)
+    base           = Macro.underscore(base)
+
+    "#{base}_#{as}"
   end
 end

@@ -1,6 +1,6 @@
 # Multitenancy with Pow
 
-You can pass repo options to the methods used in `Pow.Ecto.Context` by using the `:repo_opts` configuration option. This makes it possible to pass on the prefix option used in multitenancy apps, so you can do the following:
+You can pass repo options to the functions used in `Pow.Ecto.Context` by using the `:repo_opts` configuration option. This makes it possible to pass on the prefix option used in multitenancy apps, so you can do the following:
 
 ```elixir
 config :my_app, :pow,
@@ -173,7 +173,7 @@ defmodule MyAppWeb.AccountController do
         conn
         |> Pow.Plug.create(user)
         |> put_flash(:info, "Welcome!")
-        |> redirect(to: Routes.page_path(conn, :index))
+        |> redirect(to: ~p"/")
 
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
@@ -182,7 +182,7 @@ defmodule MyAppWeb.AccountController do
 end
 ```
 
-Now all you need is to set up the view and template, and update your router module.
+Now all you need is to set up the template, and update your router module.
 
 ## Triplex test modules
 
@@ -231,7 +231,7 @@ defmodule MyAppWeb.Pow.TriplexSessionPlugTest do
     :get
     |> Plug.Test.conn("/")
     |> Plug.Test.init_test_session(%{})
-    |> Phoenix.Controller.fetch_flash()
+    |> fetch_flash()
   end
 
   defp set_triplex_tenant(conn, tenant) do
@@ -302,17 +302,17 @@ defmodule MyAppWeb.AccountControllerTest do
     @invalid_params %{"account" => @tenant_id, "user" => %{"email" => "test@example.com", "password" => "secret1234"}}
 
     test "with invalid params", %{conn: conn} do
-      conn = post(conn, Routes.account_path(conn, :create, @invalid_params))
+      conn = post(conn, ~p"/account", @invalid_params)
 
       assert html_response(conn, 500)
       refute Pow.Plug.current_user(conn)
     end
 
     test "with valid params", %{conn: conn} do
-      conn = post(conn, Routes.account_path(conn, :create, @valid_params))
+      conn = post(conn, ~p"/account", @valid_params)
 
-      assert get_flash(conn, :info) == "Welcome!"
-      assert redirected_to(conn) == Routes.page_path(conn, :index)
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) == "Welcome!"
+      assert redirected_to(conn) == ~p"/"
 
       assert Pow.Plug.current_user(conn)
     end

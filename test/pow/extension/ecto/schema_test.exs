@@ -48,7 +48,7 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     @impl true
     defmacro __using__(_config) do
       quote do
-        def custom_method, do: true
+        def custom_function, do: true
       end
     end
   end
@@ -58,6 +58,8 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     use Pow.Ecto.Schema
     use Pow.Extension.Ecto.Schema,
       extensions: [Pow.Extension.Ecto.SchemaTest.ExtensionMock]
+
+    @ecto_derive_inspect_for_redacted_fields false
 
     schema "users" do
       pow_user_fields()
@@ -80,6 +82,8 @@ defmodule Pow.Extension.Ecto.SchemaTest do
           user_id_field: :username
         use Pow.Extension.Ecto.Schema,
           extensions: [Pow.Extension.Ecto.SchemaTest.ExtensionMock]
+
+        @ecto_derive_inspect_for_redacted_fields false
 
         schema "users" do
           pow_user_fields()
@@ -123,9 +127,9 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     assert changeset.errors[:custom] == {"custom error", []}
   end
 
-  test "has custom method definitions" do
-    assert Kernel.function_exported?(User, :custom_method, 0)
-    assert User.custom_method()
+  test "has custom function definitions" do
+    assert Kernel.function_exported?(User, :custom_function, 0)
+    assert User.custom_function()
   end
 
   test "validates attributes" do

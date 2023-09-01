@@ -1,7 +1,7 @@
 Application.put_env(:mnesia, :dir, 'tmp/mnesia')
 Application.ensure_all_started(:mnesia)
 
-Logger.configure(level: :warn)
+Logger.configure(level: :warning)
 
 :ok = Supervisor.terminate_child(Pow.Supervisor, Pow.Store.Backend.EtsCache)
 
@@ -28,7 +28,10 @@ for extension <- Application.get_env(:pow, :extension_test_modules) do
   endpoint_module = Module.concat([extension, TestWeb.Phoenix.Endpoint])
 
   Application.put_env(:pow, endpoint_module,
-    render_errors: [view: Pow.Test.Phoenix.ErrorView, accepts: ~w(html json)],
+    render_errors: [
+      formats: [html: Pow.Test.Phoenix.ErrorHTML],
+      layout: false
+    ],
     secret_key_base: String.duplicate("abcdefghijklmnopqrstuvxyz0123456789", 2))
 
   {:ok, _pid} = endpoint_module.start_link()

@@ -1,6 +1,8 @@
 # ![Pow](assets/logo-full.svg)
 
-![Build Status](https://img.shields.io/github/workflow/status/danschultzer/pow/CI/master) [![hex.pm](https://img.shields.io/hexpm/v/pow.svg?style=flat)](https://hex.pm/packages/pow)
+[![Github CI](https://github.com/pow-auth/pow/workflows/CI/badge.svg)](https://github.com/pow-auth/pow/actions?query=workflow%3ACI)
+[![hexdocs.pm](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/pow)
+[![hex.pm](https://img.shields.io/hexpm/v/pow.svg?style=flat)](https://hex.pm/packages/pow)
 
 Pow is a robust, modular, and extendable authentication and user management solution for Phoenix and Plug-based apps.
 
@@ -25,7 +27,7 @@ Add Pow to your list of dependencies in `mix.exs`:
 defp deps do
   [
     # ...
-    {:pow, "~> 1.0.23"}
+    {:pow, "~> 1.0.32"}
   ]
 end
 ```
@@ -51,83 +53,27 @@ LIB_PATH/users/user.ex
 PRIV_PATH/repo/migrations/TIMESTAMP_create_users.ex
 ```
 
-Add the following to `config/config.exs`:
+And also update the following files:
 
-```elixir
-use Mix.Config
-
-# ... existing config
-  
-config :my_app, :pow,
-  user: MyApp.Users.User,
-  repo: MyApp.Repo
-
-# ... import_config
+```bash
+config/config.exs
+WEB_PATH/endpoint.ex
+WEB_PATH/router.ex
 ```
 
-Set up `WEB_PATH/endpoint.ex` to enable session based authentication (`Pow.Plug.Session` is added after `Plug.Session`):
-
-```elixir
-defmodule MyAppWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :my_app
-
-  # ...
-
-  plug Plug.Session, @session_options
-  plug Pow.Plug.Session, otp_app: :my_app
-  plug MyAppWeb.Router
-end
-```
-
-Add Pow routes to `WEB_PATH/router.ex`:
-
-```elixir
-defmodule MyAppWeb.Router do
-  use MyAppWeb, :router
-  use Pow.Phoenix.Router
-
-  # ... pipelines
-
-  pipeline :protected do
-    plug Pow.Plug.RequireAuthenticated,
-      error_handler: Pow.Phoenix.PlugErrorHandler
-  end
-
-  scope "/" do
-    pipe_through :browser
-
-    pow_routes()
-  end
-
-  scope "/", MyAppWeb do
-    pipe_through [:browser, :protected]
-
-    # Add your protected routes here
-  end
-
-  # ... routes
-end
-```
-
-That's it! Run `mix ecto.setup` and you can now visit `http://localhost:4000/registration/new`, and create a new user.
+Run migrations with `mix setup`, start the server with `mix phx.server`, and you can now visit `http://localhost:4000/registration/new` to create a user.
 
 ### Modify templates
 
 By default, Pow exposes as few files as possible.
 
-If you wish to modify the templates, you can generate them (and the view files) using:
+If you wish to modify the templates, you can generate them using:
 
 ```bash
 mix pow.phoenix.gen.templates
 ```
 
-Remember to add `web_module: MyAppWeb` to the configuration so that the view you've just generated will be used instead:
-
-```elixir
-config :my_app, :pow,
-  # ...
-  web_module: MyAppWeb
-```
+This will also add `web_module: MyAppWeb` to the configuration in `config/config.exs`.
 
 ## Extensions
 
@@ -205,17 +151,17 @@ end
 
 #### Modify extension templates
 
-Templates and views for extensions can be generated with:
+Templates for extensions can be generated with:
 
 ```bash
 mix pow.extension.phoenix.gen.templates --extension PowResetPassword --extension PowEmailConfirmation
 ```
 
-Please follow the instructions in ["Modify templates"](#modify-templates) to ensure that your custom templates and views will be used.
+Please follow the instructions in ["Modify templates"](#modify-templates) to ensure that your custom templates will be used.
 
 ### Mailer support
 
-Many extensions require a mailer to have been set up. Let's create a mailer mock module in  `WEB_PATH/pow/mailer.ex`:
+Many extensions require a mailer to have been set up. Let's create a mailer mock module in  `WEB_PATH/mails/pow/mailer.ex`:
 
 ```elixir
 defmodule MyAppWeb.Pow.Mailer do
@@ -248,49 +194,19 @@ This mailer module will only output the mail to your log, so you can e.g. try ou
 
 #### Modify mailer templates
 
-Since Phoenix doesn't ship with a mailer setup by default you should first modify `my_app_web.ex` with a `:mailer_view` macro:
-
-```elixir
-defmodule MyAppWeb do
-  # ...
-
-  def mailer_view do
-    quote do
-      use Phoenix.View, root: "lib/my_app_web/templates",
-                        namespace: MyAppWeb
-
-      use Phoenix.HTML
-    end
-  end
-
-  # ...
-
-end
-```
-
-Now generate the view and template files:
+Generate the template files:
 
 ```bash
 mix pow.extension.phoenix.mailer.gen.templates --extension PowResetPassword --extension PowEmailConfirmation
 ```
 
-This will generate view files in `WEB_PATH/views/POW_EXTENSION/mailer/`, and html and text templates in `WEB_PATH/templates/POW_EXTENSION/mailer/` directory.
-
-Add `web_mailer_module: MyAppWeb` to the configuration so Pow will use the views you've just generated:
-
-```elixir
-config :my_app, :pow,
-  # ...
-  web_mailer_module: MyAppWeb
-```
-
-The generated view files contain the subject lines for the emails.
+This will generate template files in the `WEB_PATH/mails/` directory. This will also add the necessary `mail/0` macro to `WEB_PATH/my_app_web.ex` and update the pow config with `web_mailer_module: MyAppWeb`.
 
 ## Configuration
 
-Pow is built to be modular, and easy to configure. The configuration is passed to method calls as well as plug options, and they will take priority over any environment configuration. It's ideal in case you got an umbrella app with multiple separate user domains.
+Pow is built to be modular, and easy to configure. The configuration is passed to function calls as well as plug options, and they will take priority over any environment configuration. It's ideal in case you got an umbrella app with multiple separate user domains.
 
-The easiest way to use Pow with Phoenix is to use a `:otp_app` in method calls and set the app environment configuration. It will keep a persistent fallback configuration that you configure in one place.
+The easiest way to use Pow with Phoenix is to use a `:otp_app` in function calls and set the app environment configuration. It will keep a persistent fallback configuration that you configure in one place.
 
 ### Module groups
 
@@ -298,7 +214,7 @@ Pow has three main groups of modules that each can be used individually, or in c
 
 #### Pow.Plug
 
-This group will handle the plug connection. The configuration will be assigned to `conn.private[:pow_config]` and passed through the controller to the users' context module. The Plug module has methods to authenticate, create, update, and delete users, and will generate/renew the session automatically.
+This group will handle the plug connection. The configuration will be assigned to `conn.private[:pow_config]` and passed through the controller to the users' context module. The Plug module has functions to authenticate, create, update, and delete users, and will generate/renew the session automatically.
 
 #### Pow.Ecto
 
@@ -306,7 +222,7 @@ This group contains all modules related to the Ecto based user schema and contex
 
 #### Pow.Phoenix
 
-This group contains the controllers, views, and templates for Phoenix. You only need to set the (session) plug in `endpoint.ex` and add the routes to `router.ex`. Views and templates are not generated by default, instead, the compiled views and templates in Pow are used. You can generate the templates used by running `mix pow.phoenix.gen.templates`. You can also customize flash messages and callback routes by creating your own using `:messages_backend` and `:routes_backend`.
+This group contains the controllers and templates for Phoenix. You only need to set the (session) plug in `endpoint.ex` and add the routes to `router.ex`. Templates are not generated by default, instead, the compiled templates in Pow are used. You can generate the templates used by running `mix pow.phoenix.gen.templates`. You can also customize flash messages and callback routes by creating your own using `:messages_backend` and `:routes_backend`.
 
 The registration and session controllers can be changed with your customized versions too, but since the routes are built on compile time, you'll have to set them up in `router.ex` with `:pow` namespace. For minor pre/post-processing of requests, you can use the `:controller_callbacks` option. It exists to make it easier to modify flow with extensions (e.g., send a confirmation email upon user registration).
 
@@ -376,7 +292,7 @@ end
 
 ### Ecto changeset
 
-The user module has a fallback `changeset/2` method. If you want to add custom validations, you can use the `pow_changeset/2` method like so:
+The user module has a fallback `changeset/2` function. If you want to add custom validations, you can use the `pow_changeset/2` function like so:
 
 ```elixir
 defmodule MyApp.Users.User do
@@ -402,7 +318,7 @@ end
 
 ### Phoenix controllers
 
-Controllers in Pow are very slim and consists of just one `Pow.Plug` method call with response methods. If you wish to change the flow of the `Pow.Phoenix.RegistrationController` and `Pow.Phoenix.SessionController`, the best way is to create your own and modify `router.ex`.
+Controllers in Pow are very slim and consists of just one `Pow.Plug` function call with response functions. If you wish to change the flow of the `Pow.Phoenix.RegistrationController` and `Pow.Phoenix.SessionController`, the best way is to create your own and modify `router.ex`.
 
 However, to make it easier to integrate extension, you can add callbacks to the controllers that do some light pre/post-processing of the request:
 
@@ -418,7 +334,7 @@ defmodule MyCustomExtension.Phoenix.ControllerCallbacks do
 end
 ```
 
-You can add methods for `before_process/4` (before the action happens) and `before_respond/4` (before parsing the results from the action).
+You can add functions for `before_process/4` (before the action happens) and `before_respond/4` (before parsing the results from the action).
 
 #### Testing with authenticated users
 
@@ -449,8 +365,8 @@ defmodule MyAppWeb.Pow.Messages do
 
   def user_not_authenticated(_conn), do: gettext("You need to sign in to see this page.")
 
-  # Message methods for extensions has to be prepended with the snake cased
-  # extension name. So the `email_has_been_sent/1` method from
+  # Message functions for extensions has to be prepended with the snake cased
+  # extension name. So the `email_has_been_sent/1` function from
   # `PowResetPassword` is written as `pow_reset_password_email_has_been_sent/1`
   # in your messages module.
   def pow_reset_password_email_has_been_sent(_conn), do: gettext("An email with reset instructions has been sent to you. Please check your inbox.")
@@ -466,9 +382,9 @@ You can customize callback routes by creating the following module:
 ```elixir
 defmodule MyAppWeb.Pow.Routes do
   use Pow.Phoenix.Routes
-  alias MyAppWeb.Router.Helpers, as: Routes
+  use MyAppWeb, :verified_routes
 
-  def after_sign_in_path(conn), do: Routes.some_path(conn, :index)
+  def after_sign_in_path(conn), do: ~p"/home"
 end
 ```
 
@@ -502,12 +418,9 @@ You can use `Pow.Plug.current_user/1` to fetch the current user from the connect
 This can be used to show the sign in or sign out links in your Phoenix template:
 
 ```elixir
-<%= if Pow.Plug.current_user(@conn) do %>
-  <span><%= link "Sign out", to: Routes.pow_session_path(@conn, :delete), method: :delete %></span>
-<% else %>
-  <span><%= link "Register", to: Routes.pow_registration_path(@conn, :new) %></span>
-  <span><%= link "Sign in", to: Routes.pow_session_path(@conn, :new) %></span>
-<% end %>
+<.link :if={Pow.Plug.current_user(@conn)} href={~p"/session"} method="delete">Sign out</.link>
+<.link :if={is_nil Pow.Plug.current_user(@conn)} navigate={~p"/registration/new"}>Registration</.link>
+<.link :if={is_nil Pow.Plug.current_user(@conn)} navigate={~p"/session/new"}>Sign In</.link>
 ```
 
 The current user can also be fetched by using the template assigns set in the configuration with `:current_user_assigns_key` (defaults to `@current_user`).
@@ -570,17 +483,13 @@ Will halt connection if no current user is not present in assigns. Expects an `:
 
 Will halt connection if a current user is present in assigns. Expects an `:error_handler` option.
 
-## Migrating from Coherence
-
-If you're currently using Coherence, you can migrate your app to use Pow instead. Follow the instructions in [Coherence migration guide](guides/coherence_migration.md).
-
 ## Pow security practices
 
 See [security practices](guides/security_practices.md).
 
 ## Other libraries
 
-[PowAssent](https://github.com/danschultzer/pow_assent) - Multi-provider support for Pow with strategies for Twitter, Github, Google, Facebook and more
+[PowAssent](https://github.com/pow-auth/pow_assent) - Multi-provider support for Pow with strategies for Twitter, Github, Google, Facebook and more
 
 ## Contributing
 
