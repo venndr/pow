@@ -5,13 +5,19 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
   alias PowEmailConfirmation.Ecto.Schema
   alias PowEmailConfirmation.Test.{RepoMock, Users.User}
 
-  @password     "secret1234"
-  @valid_params %{email: "test@example.com", password: @password, password_confirmation: @password, current_password: @password}
+  @password "secret1234"
+  @valid_params %{
+    email: "test@example.com",
+    password: @password,
+    password_confirmation: @password,
+    current_password: @password
+  }
 
   defmodule OverridenChangesetUser do
     @moduledoc false
     use Ecto.Schema
     use Pow.Ecto.Schema
+
     use Pow.Extension.Ecto.Schema,
       extensions: [PowEmailConfirmation]
 
@@ -68,7 +74,8 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
       refute Ecto.Changeset.get_change(changeset, :email_confirmed_at)
     end
 
-    test "when :email not submitted doesn't set :email_confirmation_token and :unconfirmed_email", %{user: user} do
+    test "when :email not submitted doesn't set :email_confirmation_token and :unconfirmed_email",
+         %{user: user} do
       changeset = User.changeset(user, Map.drop(@valid_params, [:email]))
 
       assert changeset.valid?
@@ -96,7 +103,8 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
       assert user.email == "test@example.com"
     end
 
-    test "doesn't update :email_confirmation_token when :email already set as :unconfirmed_email", %{user: user} do
+    test "doesn't update :email_confirmation_token when :email already set as :unconfirmed_email",
+         %{user: user} do
       params = Map.put(@valid_params, :email, "new@example.com")
 
       {:ok, user} =
@@ -116,8 +124,13 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
       changeset = User.changeset(user, Map.put(@valid_params, :email, "invalid"))
 
       refute changeset.valid?
-      assert changeset.errors[:email] == {"has invalid format", [validation: :email_format, reason: "invalid format"]}
-      assert changeset.validations[:email] == {:email_format, &Pow.Ecto.Schema.Changeset.validate_email/1}
+
+      assert changeset.errors[:email] ==
+               {"has invalid format", [validation: :email_format, reason: "invalid format"]}
+
+      assert changeset.validations[:email] ==
+               {:email_format, &Pow.Ecto.Schema.Changeset.validate_email/1}
+
       refute Ecto.Changeset.get_change(changeset, :email_confirmation_token)
       refute Ecto.Changeset.get_change(changeset, :unconfirmed_email)
 
@@ -129,9 +142,16 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
       changeset = User.changeset(user, Map.put(@valid_params, :email, "invalid"))
 
       refute changeset.valid?
-      assert changeset.errors[:email] == {"has invalid format", [validation: :email_format, reason: "invalid format"]}
-      assert changeset.validations[:email] == {:email_format, &Pow.Ecto.Schema.Changeset.validate_email/1}
-      assert Ecto.Changeset.get_field(changeset, :email_confirmation_token) == user.email_confirmation_token
+
+      assert changeset.errors[:email] ==
+               {"has invalid format", [validation: :email_format, reason: "invalid format"]}
+
+      assert changeset.validations[:email] ==
+               {:email_format, &Pow.Ecto.Schema.Changeset.validate_email/1}
+
+      assert Ecto.Changeset.get_field(changeset, :email_confirmation_token) ==
+               user.email_confirmation_token
+
       assert Ecto.Changeset.get_field(changeset, :unconfirmed_email) == user.unconfirmed_email
     end
   end
@@ -201,7 +221,8 @@ defmodule PowEmailConfirmation.Ecto.SchemaTest do
 
       refute changeset.valid?
 
-      changeset = OverridenChangesetUser.confirm_email_changeset(user, %{"current_password" => @password})
+      changeset =
+        OverridenChangesetUser.confirm_email_changeset(user, %{"current_password" => @password})
 
       assert changeset.valid?
     end

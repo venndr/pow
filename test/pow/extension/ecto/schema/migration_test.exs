@@ -37,7 +37,7 @@ defmodule Pow.Extension.Ecto.Schema.MigrationTest do
 
   alias Pow.Extension.Ecto.Schema.Migration
 
-  @extension      ExtensionMock
+  @extension ExtensionMock
   @extension_name "PowExtensionEctoSchemaMigrationTestExtensionMock"
 
   test "new/1" do

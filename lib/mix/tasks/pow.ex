@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Pow do
   def run(args) do
     case args do
       [] -> general()
-      _  -> Mix.raise("Invalid arguments, expected: mix pow")
+      _ -> Mix.raise("Invalid arguments, expected: mix pow")
     end
   end
 

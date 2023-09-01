@@ -50,24 +50,30 @@ defmodule PowResetPassword.Phoenix.ResetPasswordControllerTest do
     end
 
     test "with valid params", %{conn: conn, ets: ets} do
-      conn           = post(conn, ~p"/reset-password", @valid_params)
+      conn = post(conn, ~p"/reset-password", @valid_params)
       [{[token], _}] = ResetTokenCache.all([backend: ets], [:_])
 
       assert_received {:mail_mock, mail}
 
       assert mail.subject == "Reset password link"
       assert mail.text =~ "\nhttp://localhost/reset-password/#{sign_token(conn, token)}\n"
-      assert mail.html =~ "<a href=\"http://localhost/reset-password/#{sign_token(conn, token)}\">"
+
+      assert mail.html =~
+               "<a href=\"http://localhost/reset-password/#{sign_token(conn, token)}\">"
 
       assert redirected_to(conn) == ~p"/session/new"
-      assert get_flash(conn, :info) == "If an account for the provided email exists, an email with reset instructions will be sent to you. Please check your inbox."
+
+      assert get_flash(conn, :info) ==
+               "If an account for the provided email exists, an email with reset instructions will be sent to you. Please check your inbox."
     end
 
     test "with invalid params", %{conn: conn} do
       conn = post(conn, ~p"/reset-password", @invalid_params)
 
       assert redirected_to(conn) == ~p"/session/new"
-      assert get_flash(conn, :info) == "If an account for the provided email exists, an email with reset instructions will be sent to you. Please check your inbox."
+
+      assert get_flash(conn, :info) ==
+               "If an account for the provided email exists, an email with reset instructions will be sent to you. Please check your inbox."
     end
 
     test "with invalid params and pow_prevent_user_enumeration: false", %{conn: conn} do
@@ -77,7 +83,9 @@ defmodule PowResetPassword.Phoenix.ResetPasswordControllerTest do
         |> post(~p"/reset-password", @invalid_params)
 
       assert html = html_response(conn, 200)
-      assert get_flash(conn, :error) == "No account exists for the provided email. Please try again."
+
+      assert get_flash(conn, :error) ==
+               "No account exists for the provided email. Please try again."
 
       html_tree = DOM.parse(html)
 
@@ -111,7 +119,7 @@ defmodule PowResetPassword.Phoenix.ResetPasswordControllerTest do
 
     test "with unsigned token", %{conn: conn, token: token} do
       token = decode_token(conn, token)
-      conn  = get(conn, ~p"/reset-password/#{token}")
+      conn = get(conn, ~p"/reset-password/#{token}")
 
       assert redirected_to(conn) == ~p"/reset-password/new"
       assert get_flash(conn, :error) == "The reset token has expired."
@@ -168,7 +176,7 @@ defmodule PowResetPassword.Phoenix.ResetPasswordControllerTest do
 
     test "with unsigned token", %{conn: conn, token: token} do
       token = decode_token(conn, token)
-      conn  = put(conn, ~p"/reset-password/#{token}", @valid_params)
+      conn = put(conn, ~p"/reset-password/#{token}", @valid_params)
 
       assert redirected_to(conn) == ~p"/reset-password/new"
       assert get_flash(conn, :error) == "The reset token has expired."
@@ -194,7 +202,10 @@ defmodule PowResetPassword.Phoenix.ResetPasswordControllerTest do
       assert DOM.attribute(input_elem, "value") == @password
 
       assert [input_elem] = DOM.all(html_tree, "input[name=\"user[password_confirmation]\"]")
-      assert [error_elem] = DOM.all(html_tree, "*[phx-feedback-for=\"user[password_confirmation]\"] > p")
+
+      assert [error_elem] =
+               DOM.all(html_tree, "*[phx-feedback-for=\"user[password_confirmation]\"] > p")
+
       assert DOM.attribute(input_elem, "value") == "invalid"
       assert DOM.to_text(error_elem) =~ "does not match confirmation"
 

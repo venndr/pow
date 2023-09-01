@@ -5,7 +5,10 @@ defmodule Pow.Ecto.ContextTest do
   defmodule TimingAttackUser do
     @moduledoc false
     use Ecto.Schema
-    use Pow.Ecto.Schema, password_hash_methods: {&__MODULE__.send_hash_password/1, &__MODULE__.send_verify_password/2}
+
+    use Pow.Ecto.Schema,
+      password_hash_methods:
+        {&__MODULE__.send_hash_password/1, &__MODULE__.send_verify_password/2}
 
     @ecto_derive_inspect_for_redacted_fields false
 
@@ -38,7 +41,8 @@ defmodule Pow.Ecto.ContextTest do
   defmodule CustomUsers do
     use Context, repo: Repo, user: User
 
-    def get_by([email: :test]), do: %User{email: :ok, password_hash: Password.pbkdf2_hash("secret1234")}
+    def get_by(email: :test),
+      do: %User{email: :ok, password_hash: Password.pbkdf2_hash("secret1234")}
   end
 
   describe "authenticate/2" do
@@ -48,10 +52,12 @@ defmodule Pow.Ecto.ContextTest do
 
     setup do
       password_hash = Password.pbkdf2_hash(@password)
+
       user =
         %User{}
         |> Changeset.change(email: "test@example.com", password_hash: password_hash)
         |> Repo.insert!()
+
       username_user =
         %UsernameUser{}
         |> Changeset.change(username: "john.doe", password_hash: password_hash)
@@ -77,14 +83,32 @@ defmodule Pow.Ecto.ContextTest do
       refute Context.authenticate(Map.put(@valid_params, "password", "invalid"), @config)
       assert Context.authenticate(@valid_params, @config) == user
 
-      refute Context.authenticate(Map.put(@valid_params_username, "username", "jane.doe"), @username_config)
-      refute Context.authenticate(Map.put(@valid_params_username, "password", "invalid"), @username_config)
+      refute Context.authenticate(
+               Map.put(@valid_params_username, "username", "jane.doe"),
+               @username_config
+             )
+
+      refute Context.authenticate(
+               Map.put(@valid_params_username, "password", "invalid"),
+               @username_config
+             )
+
       assert Context.authenticate(@valid_params_username, @username_config) == username_user
     end
 
-    test "authenticates with case insensitive value for user id field", %{user: user, username_user: username_user} do
-      assert Context.authenticate(%{"email" => "TEST@example.COM", "password" => @password}, @config) == user
-      assert Context.authenticate(%{"username" => "JOHN.doE", "password" => @password}, @username_config) == username_user
+    test "authenticates with case insensitive value for user id field", %{
+      user: user,
+      username_user: username_user
+    } do
+      assert Context.authenticate(
+               %{"email" => "TEST@example.COM", "password" => @password},
+               @config
+             ) == user
+
+      assert Context.authenticate(
+               %{"username" => "JOHN.doE", "password" => @password},
+               @username_config
+             ) == username_user
     end
 
     test "handles nil values" do
@@ -94,9 +118,19 @@ defmodule Pow.Ecto.ContextTest do
       refute Context.authenticate(%{"email" => "test@example.com", "password" => nil}, @config)
     end
 
-    test "authenticates with extra trailing and leading whitespace for user id field", %{user: user, username_user: username_user} do
-      assert Context.authenticate(%{"email" => " test@example.com ", "password" => @password}, @config) == user
-      assert Context.authenticate(%{"username" => " john.doe ", "password" => @password}, @username_config) == username_user
+    test "authenticates with extra trailing and leading whitespace for user id field", %{
+      user: user,
+      username_user: username_user
+    } do
+      assert Context.authenticate(
+               %{"email" => " test@example.com ", "password" => @password},
+               @config
+             ) == user
+
+      assert Context.authenticate(
+               %{"username" => " john.doe ", "password" => @password},
+               @username_config
+             ) == username_user
     end
 
     test "as `use Pow.Ecto.Context`", %{user: user} do
@@ -107,7 +141,9 @@ defmodule Pow.Ecto.ContextTest do
     test "with `:users_context`" do
       params = Map.put(@valid_params, "email", :test)
 
-      assert %User{email: :ok} = Context.authenticate(params, @config ++ [users_context: CustomUsers])
+      assert %User{email: :ok} =
+               Context.authenticate(params, @config ++ [users_context: CustomUsers])
+
       assert %User{email: :ok} = CustomUsers.authenticate(params)
     end
 
@@ -132,7 +168,9 @@ defmodule Pow.Ecto.ContextTest do
     }
 
     test "creates" do
-      assert {:error, _changeset} = Context.create(Map.delete(@valid_params, "password_confirmation"), @config)
+      assert {:error, _changeset} =
+               Context.create(Map.delete(@valid_params, "password_confirmation"), @config)
+
       assert {:ok, user} = Context.create(@valid_params, @config)
       assert user.custom == "custom"
       refute user.password
@@ -158,13 +196,17 @@ defmodule Pow.Ecto.ContextTest do
 
     setup do
       password_hash = Password.pbkdf2_hash(@password)
-      changeset = Changeset.change(%User{}, email: "test@exampe.com", password_hash: password_hash)
+
+      changeset =
+        Changeset.change(%User{}, email: "test@exampe.com", password_hash: password_hash)
 
       {:ok, %{user: Repo.insert!(changeset)}}
     end
 
     test "updates", %{user: user} do
-      assert {:error, _changeset} = Context.update(user, Map.delete(@valid_params, "current_password"), @config)
+      assert {:error, _changeset} =
+               Context.update(user, Map.delete(@valid_params, "current_password"), @config)
+
       assert {:ok, updated_user} = Context.update(user, @valid_params, @config)
       assert Context.authenticate(@valid_params, @config) == updated_user
       assert updated_user.custom == "custom"

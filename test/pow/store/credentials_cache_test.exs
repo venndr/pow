@@ -65,8 +65,9 @@ defmodule Pow.Store.CredentialsCacheTest do
     config = @config ++ [ttl: :timer.minutes(30) + 1]
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      CredentialsCache.put(config, "key_1", {%User{id: 1}, a: 1})
-    end) =~ "warning: `:ttl` value for sessions should be no longer than 30 minutes to prevent session hijack, please consider lowering the value"
+             CredentialsCache.put(config, "key_1", {%User{id: 1}, a: 1})
+           end) =~
+             "warning: `:ttl` value for sessions should be no longer than 30 minutes to prevent session hijack, please consider lowering the value"
   end
 
   test "get/2 when reload: true without :pow_config" do
@@ -80,8 +81,8 @@ defmodule Pow.Store.CredentialsCacheTest do
   end
 
   defmodule ContextMock do
-    def get_by([id: 1]), do: %User{id: :loaded}
-    def get_by([id: :missing]), do: nil
+    def get_by(id: 1), do: %User{id: :loaded}
+    def get_by(id: :missing), do: nil
   end
 
   test "get/2 when reload: true", %{ets: ets} do
@@ -121,8 +122,8 @@ defmodule Pow.Store.CredentialsCacheTest do
 
     @primary_key false
     schema "users" do
-      field :some_id, :integer, primary_key: true
-      field :another_id, :integer, primary_key: true
+      field(:some_id, :integer, primary_key: true)
+      field(:another_id, :integer, primary_key: true)
 
       timestamps()
     end
@@ -134,7 +135,12 @@ defmodule Pow.Store.CredentialsCacheTest do
     CredentialsCache.put(@config, "key_1", {user, a: 1})
 
     assert CredentialsCache.users(@config, CompositePrimaryFieldsUser) == [user]
-    assert ets.get(@backend_config, [CompositePrimaryFieldsUser, :user, [another_id: 2, some_id: 1]]) == user
+
+    assert ets.get(@backend_config, [
+             CompositePrimaryFieldsUser,
+             :user,
+             [another_id: 2, some_id: 1]
+           ]) == user
   end
 
   # TODO: Remove by 1.1.0
@@ -144,13 +150,22 @@ defmodule Pow.Store.CredentialsCacheTest do
 
     ets.put(@backend_config, {"key_1", {user_1, inserted_at: timestamp}})
 
-    assert CredentialsCache.get(@config, @backend_config, "key_1") == {user_1, inserted_at: timestamp}
+    assert CredentialsCache.get(@config, @backend_config, "key_1") ==
+             {user_1, inserted_at: timestamp}
+
     assert CredentialsCache.delete(@config, @backend_config, "key_1") == :ok
     assert CredentialsCache.get(@config, @backend_config, "key_1") == :not_found
 
-    assert_capture_io_eval(quote do
-      assert CredentialsCache.user_session_keys(unquote(@config), unquote(@backend_config), User) == []
-    end, "Pow.Store.CredentialsCache.user_session_keys/3 is deprecated. Use `users/2` or `sessions/2` instead")
+    assert_capture_io_eval(
+      quote do
+        assert CredentialsCache.user_session_keys(
+                 unquote(@config),
+                 unquote(@backend_config),
+                 User
+               ) == []
+      end,
+      "Pow.Store.CredentialsCache.user_session_keys/3 is deprecated. Use `users/2` or `sessions/2` instead"
+    )
 
     user_2 = %UsernameUser{id: 1}
 
@@ -158,12 +173,26 @@ defmodule Pow.Store.CredentialsCacheTest do
     CredentialsCache.put(@config, @backend_config, "key_2", {user_1, a: 1})
     CredentialsCache.put(@config, @backend_config, "key_3", {user_2, a: 1})
 
-    assert_capture_io_eval(quote do
-      assert CredentialsCache.user_session_keys(unquote(@config), unquote(@backend_config), User) == [[Pow.Test.Ecto.Users.User, :user, 1, :session, "key_1"], [Pow.Test.Ecto.Users.User, :user, 1, :session, "key_2"]]
-      assert CredentialsCache.user_session_keys(unquote(@config), unquote(@backend_config), UsernameUser) == [[Pow.Test.Ecto.Users.UsernameUser, :user, 1, :session, "key_3"]]
-    end, "Pow.Store.CredentialsCache.user_session_keys/3 is deprecated. Use `users/2` or `sessions/2` instead")
-  end
+    assert_capture_io_eval(
+      quote do
+        assert CredentialsCache.user_session_keys(
+                 unquote(@config),
+                 unquote(@backend_config),
+                 User
+               ) == [
+                 [Pow.Test.Ecto.Users.User, :user, 1, :session, "key_1"],
+                 [Pow.Test.Ecto.Users.User, :user, 1, :session, "key_2"]
+               ]
 
+        assert CredentialsCache.user_session_keys(
+                 unquote(@config),
+                 unquote(@backend_config),
+                 UsernameUser
+               ) == [[Pow.Test.Ecto.Users.UsernameUser, :user, 1, :session, "key_3"]]
+      end,
+      "Pow.Store.CredentialsCache.user_session_keys/3 is deprecated. Use `users/2` or `sessions/2` instead"
+    )
+  end
 
   alias ExUnit.CaptureIO
 
@@ -180,11 +209,13 @@ defmodule Pow.Store.CredentialsCacheTest do
           end
 
         assert CaptureIO.capture_io(:stderr, fn ->
-          Code.eval_quoted([pre_elixir_1_10_quoted, quoted])
-        end) =~ message
+                 Code.eval_quoted([pre_elixir_1_10_quoted, quoted])
+               end) =~ message
 
       false ->
-        IO.warn("Please upgrade to Elixir 1.8 to captured and assert IO message: #{inspect message}")
+        IO.warn(
+          "Please upgrade to Elixir 1.8 to captured and assert IO message: #{inspect(message)}"
+        )
 
         :ok
     end

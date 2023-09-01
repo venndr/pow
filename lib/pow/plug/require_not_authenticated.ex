@@ -28,6 +28,7 @@ defmodule Pow.Plug.RequireNotAuthenticated do
   end
 
   defp maybe_halt(nil, conn, _handler), do: conn
+
   defp maybe_halt(_user, conn, handler) do
     conn
     |> handler.call(:already_authenticated)
@@ -36,5 +37,8 @@ defmodule Pow.Plug.RequireNotAuthenticated do
 
   @spec raise_no_error_handler!() :: no_return()
   defp raise_no_error_handler!(),
-    do: Config.raise_error("No :error_handler configuration option provided. It's required to set this when using #{inspect __MODULE__}.")
+    do:
+      Config.raise_error(
+        "No :error_handler configuration option provided. It's required to set this when using #{inspect(__MODULE__)}."
+      )
 end

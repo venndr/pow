@@ -75,7 +75,7 @@ defmodule Pow.Plug do
   @spec prepend_with_namespace(Config.t(), binary()) :: binary()
   def prepend_with_namespace(config, string) do
     case fetch_namespace(config) do
-      nil       -> string
+      nil -> string
       namespace -> "#{namespace}_#{string}"
     end
   end
@@ -94,7 +94,7 @@ defmodule Pow.Plug do
     params
     |> Operations.authenticate(config)
     |> case do
-      nil  -> {:error, conn}
+      nil -> {:error, conn}
       user -> {:ok, create(conn, user, config)}
     end
   end
@@ -113,7 +113,7 @@ defmodule Pow.Plug do
     config = fetch_config(conn)
 
     case current_user(conn, config) do
-      nil  -> Operations.changeset(params, config)
+      nil -> Operations.changeset(params, config)
       user -> Operations.changeset(user, params, config)
     end
   end
@@ -160,7 +160,7 @@ defmodule Pow.Plug do
     |> current_user(config)
     |> Operations.delete(config)
     |> case do
-      {:ok, user}         -> {:ok, user, delete(conn, config)}
+      {:ok, user} -> {:ok, user, delete(conn, config)}
       {:error, changeset} -> {:error, changeset, conn}
     end
   end
@@ -168,6 +168,7 @@ defmodule Pow.Plug do
   defp maybe_create_auth({:ok, user}, conn, config) do
     {:ok, user, create(conn, user, config)}
   end
+
   defp maybe_create_auth({:error, changeset}, conn, _config) do
     {:error, changeset, conn}
   end
@@ -203,22 +204,35 @@ defmodule Pow.Plug do
 
   @spec no_config_error!() :: no_return()
   defp no_config_error!(),
-    do: Config.raise_error("Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.")
+    do:
+      Config.raise_error(
+        "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection."
+      )
 
   @spec no_plug_error!() :: no_return()
   defp no_plug_error!(),
-    do: Config.raise_error("Pow plug was not found in config. Please use a Pow plug that puts the `:plug` in the Pow configuration.")
+    do:
+      Config.raise_error(
+        "Pow plug was not found in config. Please use a Pow plug that puts the `:plug` in the Pow configuration."
+      )
 
   @doc false
   @spec __prevent_user_enumeration__(Conn.t(), any()) :: boolean()
-  def __prevent_user_enumeration__(%{private: %{pow_prevent_user_enumeration: false}}, _changeset), do: false
-  def __prevent_user_enumeration__(_conn, %{errors: errors}), do: unique_constraint_error?(errors, :email)
+  def __prevent_user_enumeration__(
+        %{private: %{pow_prevent_user_enumeration: false}},
+        _changeset
+      ),
+      do: false
+
+  def __prevent_user_enumeration__(_conn, %{errors: errors}),
+    do: unique_constraint_error?(errors, :email)
+
   def __prevent_user_enumeration__(_conn, _any), do: true
 
   defp unique_constraint_error?(errors, field) do
     Enum.find_value(errors, false, fn
       {^field, {_msg, [constraint: :unique, constraint_name: _name]}} -> true
-      _any                                                            -> false
+      _any -> false
     end)
   end
 
@@ -235,7 +249,7 @@ defmodule Pow.Plug do
 
   @spec sign_token(Conn.t(), binary(), binary(), Config.t() | nil) :: binary()
   def sign_token(conn, salt, token, config \\ nil) do
-    config           = config || fetch_config(conn)
+    config = config || fetch_config(conn)
     {module, config} = message_verifier_module(config)
 
     module.sign(conn, salt, token, config)
@@ -253,7 +267,7 @@ defmodule Pow.Plug do
   """
   @spec verify_token(Conn.t(), binary(), binary(), Config.t() | nil) :: {:ok, binary()} | :error
   def verify_token(conn, salt, token, config \\ nil) do
-    config           = config || fetch_config(conn)
+    config = config || fetch_config(conn)
     {module, config} = message_verifier_module(config)
 
     module.verify(conn, salt, token, config)
@@ -262,7 +276,7 @@ defmodule Pow.Plug do
   defp message_verifier_module(config) do
     case Config.get(config, :message_verifier, MessageVerifier) do
       {module, config} -> {module, config}
-      module           -> {module, []}
+      module -> {module, []}
     end
   end
 

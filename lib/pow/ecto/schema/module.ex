@@ -39,8 +39,8 @@ defmodule Pow.Ecto.Schema.Module do
   """
   @spec new(atom(), binary(), binary(), Config.t()) :: map()
   def new(base, schema_name, schema_plural, config \\ []) do
-    module        = Module.concat([base, schema_name])
-    binary_id     = config[:binary_id]
+    module = Module.concat([base, schema_name])
+    binary_id = config[:binary_id]
     user_id_field = config[:user_id_field]
 
     %{

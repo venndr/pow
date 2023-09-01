@@ -11,7 +11,7 @@ defmodule PowResetPassword.Ecto.ContextTest do
   @user %User{id: 1, password_hash: :set}
 
   defmodule CustomUsers do
-    def get_by([email: :test]), do: %User{email: :ok}
+    def get_by(email: :test), do: %User{email: :ok}
   end
 
   describe "get_by_email/2" do
@@ -25,13 +25,20 @@ defmodule PowResetPassword.Ecto.ContextTest do
     end
 
     test "with `:users_context`" do
-      assert %User{email: :ok} = Context.get_by_email(:test, @config ++ [users_context: CustomUsers])
+      assert %User{email: :ok} =
+               Context.get_by_email(:test, @config ++ [users_context: CustomUsers])
     end
   end
 
   describe "update_password/2" do
     test "updates with compiled password hash functions" do
-      assert {:ok, user} = Context.update_password(@user, %{password: @password, password_confirmation: @password}, @config)
+      assert {:ok, user} =
+               Context.update_password(
+                 @user,
+                 %{password: @password, password_confirmation: @password},
+                 @config
+               )
+
       assert Password.pbkdf2_verify(@password, user.password_hash)
     end
 
@@ -39,7 +46,9 @@ defmodule PowResetPassword.Ecto.ContextTest do
       assert {:error, changeset} = Context.update_password(@user, %{}, @config)
       assert changeset.errors[:password] == {"can't be blank", [validation: :required]}
 
-      assert {:error, changeset} = Context.update_password(@user, %{password: "", password_confirmation: ""}, @config)
+      assert {:error, changeset} =
+               Context.update_password(@user, %{password: "", password_confirmation: ""}, @config)
+
       assert changeset.errors[:password] == {"can't be blank", [validation: :required]}
     end
   end

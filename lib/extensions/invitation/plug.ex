@@ -18,7 +18,7 @@ defmodule PowInvitation.Plug do
     |> Plug.current_user()
     |> InvitationContext.create(params, config)
     |> case do
-      {:ok, user}         -> {:ok, user, conn}
+      {:ok, user} -> {:ok, user, conn}
       {:error, changeset} -> {:error, changeset, conn}
     end
   end
@@ -57,7 +57,7 @@ defmodule PowInvitation.Plug do
     |> invited_user()
     |> InvitationContext.update(params, config)
     |> case do
-      {:ok, user}         -> {:ok, user, Plug.create(conn, user, config)}
+      {:ok, user} -> {:ok, user, Plug.create(conn, user, config)}
       {:error, changeset} -> {:error, changeset, conn}
     end
   end
@@ -88,7 +88,7 @@ defmodule PowInvitation.Plug do
   def load_invited_user_by_token(conn, signed_token) do
     config = Plug.fetch_config(conn)
 
-    with {:ok, token}               <- Plug.verify_token(conn, signing_salt(), signed_token, config),
+    with {:ok, token} <- Plug.verify_token(conn, signing_salt(), signed_token, config),
          user when not is_nil(user) <- InvitationContext.get_by_invitation_token(token, config) do
       {:ok, Conn.assign(conn, :invited_user, user)}
     else

@@ -48,22 +48,34 @@ defmodule Pow.Phoenix.Mailer.Mail do
   """
   @spec new(Conn.t(), map(), {module(), atom()}, Keyword.t()) :: t()
   def new(conn, user, {mail_module, template}, assigns) do
-    config       = Plug.fetch_config(conn)
-    web_module   = Config.get(config, :web_mailer_module)
+    config = Plug.fetch_config(conn)
+    web_module = Config.get(config, :web_mailer_module)
     view_assigns = [conn: conn, user: user] |> Keyword.merge(assigns)
-    layouts      = conn |> handle_deprecated_layout() |> get_layouts()
-    template     = render_mail_template(mail_module, web_module, template, view_assigns, layouts)
+    layouts = conn |> handle_deprecated_layout() |> get_layouts()
+    template = render_mail_template(mail_module, web_module, template, view_assigns, layouts)
 
-    struct(__MODULE__, user: user, subject: template.subject, text: template.text, html: template.html, assigns: assigns)
+    struct(__MODULE__,
+      user: user,
+      subject: template.subject,
+      text: template.text,
+      html: template.html,
+      assigns: assigns
+    )
   end
 
   # TODO: Remove when MailView structure is hard deprecated
   defp handle_deprecated_layout(conn) do
     case Map.has_key?(conn.private, :pow_mailer_layout) do
       true ->
-        IO.warn("`:pow_mailer_layout` in conn.private has been deprecated, please change it to `:pow_mailer_layouts`")
+        IO.warn(
+          "`:pow_mailer_layout` in conn.private has been deprecated, please change it to `:pow_mailer_layouts`"
+        )
 
-        %{conn | private: Map.put(conn.private, :pow_mailer_layouts, _: conn.private[:pow_mailer_layout])}
+        %{
+          conn
+          | private:
+              Map.put(conn.private, :pow_mailer_layouts, _: conn.private[:pow_mailer_layout])
+        }
 
       false ->
         conn
@@ -93,6 +105,7 @@ defmodule Pow.Phoenix.Mailer.Mail do
   end
 
   defp replace_web_module(module, nil), do: module
+
   defp replace_web_module(module, web_module) do
     [base, _mail] =
       module
@@ -115,9 +128,7 @@ defmodule Pow.Phoenix.Mailer.Mail do
 
     text_string = render_within_layout(mail.text, assigns, text_layout)
 
-    %{mail |
-      html: html_string,
-      text: text_string}
+    %{mail | html: html_string, text: text_string}
   end
 
   defp get_layout(layouts, format) do
@@ -128,6 +139,7 @@ defmodule Pow.Phoenix.Mailer.Mail do
   end
 
   defp render_within_layout(content, _assigns, false), do: content
+
   defp render_within_layout(content, assigns, {layout_mod, layout_tpl}) do
     apply(layout_mod, layout_tpl, [assigns ++ [inner_content: content]])
   end
@@ -136,8 +148,20 @@ defmodule Pow.Phoenix.Mailer.Mail do
   defp fallback_render(module, template, assigns, layouts) do
     %Template{
       subject: module.subject(template, assigns),
-      text: Phoenix.Template.render_to_string(module, to_string(template), "text", put_layout(assigns, layouts, :text)),
-      html: Phoenix.Template.render_to_string(module, to_string(template), "html", put_layout(assigns, layouts, :html))
+      text:
+        Phoenix.Template.render_to_string(
+          module,
+          to_string(template),
+          "text",
+          put_layout(assigns, layouts, :text)
+        ),
+      html:
+        Phoenix.Template.render_to_string(
+          module,
+          to_string(template),
+          "html",
+          put_layout(assigns, layouts, :html)
+        )
     }
   end
 
@@ -147,12 +171,15 @@ defmodule Pow.Phoenix.Mailer.Mail do
     Keyword.put(assigns, :layout, layout)
   end
 
-  defp parse_layout({view, layout}, format) when is_atom(layout), do: {view, "#{layout}.#{format}"}
+  defp parse_layout({view, layout}, format) when is_atom(layout),
+    do: {view, "#{layout}.#{format}"}
+
   defp parse_layout({view, layout}, format) when is_binary(layout) do
     case String.ends_with?(layout, ".#{format}") do
-      true  -> {view, layout}
+      true -> {view, layout}
       false -> false
     end
   end
+
   defp parse_layout(false, _format), do: false
 end

@@ -27,11 +27,15 @@ defmodule Pow.Store.BaseTest do
     config = [backend: BackendCacheMock]
 
     assert BaseMock.get(config, :backend) == :mock_backend
-    assert BaseMock.get(config, :config) == [ttl: :timer.seconds(10), namespace: "default_namespace"]
+
+    assert BaseMock.get(config, :config) == [
+             ttl: :timer.seconds(10),
+             namespace: "default_namespace"
+           ]
   end
 
   test "preset config can be overridden" do
-    default_config  = []
+    default_config = []
     override_config = [ttl: 50, namespace: "overridden_namespace"]
 
     assert BaseMock.get(default_config, :test) == :not_found
@@ -81,27 +85,29 @@ defmodule Pow.Store.BaseTest do
 
     key = [BackwardsCompabilityMock, :id, 2]
     binary_key = "default_namespace:#{:erlang.term_to_binary(key)}"
-    binary_key_warning = "binary key for backend stores is depecated, update `Pow.Store.BaseTest.BackwardsCompabilityMock` to accept erlang terms instead"
+
+    binary_key_warning =
+      "binary key for backend stores is depecated, update `Pow.Store.BaseTest.BackwardsCompabilityMock` to accept erlang terms instead"
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      assert BaseMock.put(config, key, :value) == :ok
-      assert_received {:put, ^binary_key, :value}
-    end) =~ binary_key_warning
+             assert BaseMock.put(config, key, :value) == :ok
+             assert_received {:put, ^binary_key, :value}
+           end) =~ binary_key_warning
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      assert BaseMock.get(config, key) == :value
-      assert_received {:get, ^binary_key}
-    end) =~ binary_key_warning
+             assert BaseMock.get(config, key) == :value
+             assert_received {:get, ^binary_key}
+           end) =~ binary_key_warning
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      assert BaseMock.delete(config, key) == :ok
-      assert_received {:delete, ^binary_key}
-    end)
+             assert BaseMock.delete(config, key) == :ok
+             assert_received {:delete, ^binary_key}
+           end)
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      assert BaseMock.all(config, [BackwardsCompabilityMock | :_]) == [{key, :value}]
-      assert BaseMock.all(config, [BackwardsCompabilityMock, :id, :_]) == [{key, :value}]
-      assert BaseMock.all(config, [BackwardsCompabilityMock, :id, 3]) == []
-    end)
+             assert BaseMock.all(config, [BackwardsCompabilityMock | :_]) == [{key, :value}]
+             assert BaseMock.all(config, [BackwardsCompabilityMock, :id, :_]) == [{key, :value}]
+             assert BaseMock.all(config, [BackwardsCompabilityMock, :id, 3]) == []
+           end)
   end
 end

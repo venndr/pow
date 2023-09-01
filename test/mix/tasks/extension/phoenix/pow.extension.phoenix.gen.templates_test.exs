@@ -4,12 +4,14 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
   alias Mix.Tasks.Pow.Extension.Phoenix.Gen.Templates
 
   @expected_template_files [
-    {PowResetPassword, %{
-      "reset_password_html" => ["edit.html.heex", "new.html.heex"]
-    }},
-    {PowInvitation, %{
-      "invitation_html" => ["edit.html.heex", "new.html.heex", "show.html.heex"]
-    }}
+    {PowResetPassword,
+     %{
+       "reset_password_html" => ["edit.html.heex", "new.html.heex"]
+     }},
+    {PowInvitation,
+     %{
+       "invitation_html" => ["edit.html.heex", "new.html.heex", "show.html.heex"]
+     }}
   ]
   @options Enum.flat_map(@expected_template_files, &["--extension", inspect(elem(&1, 0))])
 
@@ -19,7 +21,7 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
 
       for {module, expected_templates} <- @expected_template_files do
         templates_path = Path.join(["lib", "pow_web", "controllers", Macro.underscore(module)])
-        expected_dirs  = Map.keys(expected_templates)
+        expected_dirs = Map.keys(expected_templates)
         expected_files = Enum.map(expected_dirs, &"#{&1}.ex")
 
         assert expected_dirs -- ls(templates_path) == []
@@ -32,7 +34,7 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
         end
 
         for base_name <- expected_dirs do
-          content     = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
+          content = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
           module_name = base_name |> Macro.camelize() |> String.replace_suffix("Html", "HTML")
 
           assert content =~ "defmodule PowWeb.#{inspect(module)}.#{module_name} do"
@@ -47,7 +49,10 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
     File.cd!(context.tmp_path, fn ->
       Templates.run([])
 
-      assert_received {:mix_shell, :error, ["No extensions was provided as arguments, or found in `config :pow, :pow` configuration."]}
+      assert_received {:mix_shell, :error,
+                       [
+                         "No extensions was provided as arguments, or found in `config :pow, :pow` configuration."
+                       ]}
     end)
   end
 
@@ -55,13 +60,17 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
     File.cd!(context.tmp_path, fn ->
       Templates.run(~w(--extension PowPersistentSession))
 
-      assert_received {:mix_shell, :info, ["Notice: No template files will be generated for PowPersistentSession as this extension doesn't have any templates defined."]}
+      assert_received {:mix_shell, :info,
+                       [
+                         "Notice: No template files will be generated for PowPersistentSession as this extension doesn't have any templates defined."
+                       ]}
     end)
   end
 
   describe "with extensions in env config" do
     setup do
       Application.put_env(:pow, :pow, extensions: Enum.map(@expected_template_files, &elem(&1, 0)))
+
       on_exit(fn ->
         Application.delete_env(:pow, :pow)
       end)
@@ -73,12 +82,12 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
 
         for {module, expected_templates} <- @expected_template_files do
           templates_path = Path.join(["lib", "pow_web", "controllers", Macro.underscore(module)])
-          dirs           = templates_path |> File.ls!() |> Enum.sort()
+          dirs = templates_path |> File.ls!() |> Enum.sort()
 
           assert Map.keys(expected_templates) -- dirs == []
 
           [base_name] = expected_templates |> Map.keys()
-          content     = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
+          content = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
           module_name = base_name |> Macro.camelize() |> String.replace_suffix("Html", "HTML")
 
           assert content =~ "defmodule PowWeb.#{inspect(module)}.#{module_name} do"
@@ -97,12 +106,19 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.TemplatesTest do
 
     for extension_dir <- File.ls!("lib/extensions"),
         File.dir?("lib/extensions/#{extension_dir}/phoenix/controllers"),
-        template <- Enum.filter(File.ls!("lib/extensions/#{extension_dir}/phoenix/controllers"), &String.ends_with?(&1, "_html.ex")) do
+        template <-
+          Enum.filter(
+            File.ls!("lib/extensions/#{extension_dir}/phoenix/controllers"),
+            &String.ends_with?(&1, "_html.ex")
+          ) do
       module = Module.concat(["Pow#{Macro.camelize(extension_dir)}"])
       template = String.replace_suffix(template, ".ex", "")
 
-      assert Map.has_key?(expected, module), "Missing template tests for #{inspect(module)} extension"
-      assert template in Map.keys(expected[module]), "Not all templates are tested for the #{inspect(module)} extension"
+      assert Map.has_key?(expected, module),
+             "Missing template tests for #{inspect(module)} extension"
+
+      assert template in Map.keys(expected[module]),
+             "Not all templates are tested for the #{inspect(module)} extension"
     end
   end
 end

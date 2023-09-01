@@ -52,7 +52,8 @@ defmodule PowPersistentSession.Plug.Base do
           conn
           |> Plug.fetch_config()
           |> Config.merge(config)
-        conn   = Conn.put_private(conn, :pow_persistent_session, {__MODULE__, config})
+
+        conn = Conn.put_private(conn, :pow_persistent_session, {__MODULE__, config})
 
         conn
         |> Plug.current_user(config)
@@ -79,7 +80,7 @@ defmodule PowPersistentSession.Plug.Base do
   def store(config) do
     case Config.get(config, :persistent_session_store) do
       {store, store_config} -> {store, store_opts(config, store_config)}
-      nil                   -> {PersistentSessionCache, store_opts(config)}
+      nil -> {PersistentSessionCache, store_opts(config)}
     end
   end
 

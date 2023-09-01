@@ -33,20 +33,21 @@ defmodule Pow.Phoenix.Controller do
   @doc false
   defmacro __using__(config) do
     quote do
-      use Phoenix.Controller, (
-        # TODO: Remove when Phoenix 1.7 is required
-        if Code.ensure_loaded?(Phoenix.View) do
-          [namespace: Pow.Phoenix]
-        else
-          [
-            layouts: [html: Pow.Phoenix.Layouts],
-            formats: [:html]
-          ]
-        end)
+      use Phoenix.Controller,
+          # TODO: Remove when Phoenix 1.7 is required
+          (if Code.ensure_loaded?(Phoenix.View) do
+             [namespace: Pow.Phoenix]
+           else
+             [
+               layouts: [html: Pow.Phoenix.Layouts],
+               formats: [:html]
+             ]
+           end)
 
-      import unquote(__MODULE__), only: [require_authenticated: 2, require_not_authenticated: 2, put_no_cache_header: 2]
+      import unquote(__MODULE__),
+        only: [require_authenticated: 2, require_not_authenticated: 2, put_no_cache_header: 2]
 
-      plug :pow_layout, unquote(config)
+      plug(:pow_layout, unquote(config))
 
       def action(conn, _opts), do: unquote(__MODULE__).action(__MODULE__, conn, conn.params)
 
@@ -88,18 +89,22 @@ defmodule Pow.Phoenix.Controller do
   end
 
   defp process_action({:halt, conn}, _controller, _action, _params), do: {:halt, conn}
+
   defp process_action(conn, controller, action, params) do
     apply(controller, String.to_atom("process_#{action}"), [conn, params])
   end
 
   defp respond_action({:halt, conn}, _controller, _action), do: conn
+
   defp respond_action(results, controller, action) do
     apply(controller, String.to_atom("respond_#{action}"), [results])
   end
 
   defp maybe_callback({:halt, conn}, _callbacks, _hook, _controller, _action, _config),
     do: {:halt, conn}
+
   defp maybe_callback(results, nil, _hook, _controller, _action, _config), do: results
+
   defp maybe_callback(results, callbacks, hook, controller, action, config) do
     apply(callbacks, hook, [controller, action, results, config])
   end
@@ -149,7 +154,7 @@ defmodule Pow.Phoenix.Controller do
   end
 
   @default_cache_control_header Conn.get_resp_header(struct(Conn), "cache-control")
-  @no_cache_control_header      "no-cache, no-store, must-revalidate"
+  @no_cache_control_header "no-cache, no-store, must-revalidate"
 
   @doc """
   Ensures that the page can't be cached in browser.
@@ -163,17 +168,20 @@ defmodule Pow.Phoenix.Controller do
     conn
     |> Conn.get_resp_header("cache-control")
     |> case do
-      @default_cache_control_header -> Conn.put_resp_header(conn, "cache-control", @no_cache_control_header)
-      _any                          -> conn
+      @default_cache_control_header ->
+        Conn.put_resp_header(conn, "cache-control", @no_cache_control_header)
+
+      _any ->
+        conn
     end
   end
 
   # TODO: Remove when Phoenix 1.7 is required
   @spec route_helper(atom()) :: binary()
   def route_helper(plug) do
-    as             = Phoenix.Naming.resource_name(plug, "Controller")
+    as = Phoenix.Naming.resource_name(plug, "Controller")
     [base | _rest] = Module.split(plug)
-    base           = Macro.underscore(base)
+    base = Macro.underscore(base)
 
     "#{base}_#{as}"
   end

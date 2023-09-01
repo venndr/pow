@@ -26,6 +26,7 @@ defmodule Pow.Phoenix.PlugErrorHandler do
     |> maybe_set_error_flash(messages(conn, Messages).user_not_authenticated(conn))
     |> Controller.redirect(to: routes(conn, Routes).user_not_authenticated_path(conn))
   end
+
   def call(conn, :already_authenticated) do
     conn
     |> maybe_set_error_flash(messages(conn, Messages).user_already_authenticated(conn))

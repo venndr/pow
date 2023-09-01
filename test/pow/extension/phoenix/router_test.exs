@@ -20,7 +20,9 @@ defmodule Pow.Extension.Phoenix.RouterTest do
     @impl true
     defmacro routes(_config) do
       quote location: :keep do
-        Router.pow_resources "/test", TestController, only: [:new, :create, :edit, :update, :delete]
+        Router.pow_resources("/test", TestController,
+          only: [:new, :create, :edit, :update, :delete]
+        )
       end
     end
   end
@@ -28,12 +30,13 @@ defmodule Pow.Extension.Phoenix.RouterTest do
   defmodule Router do
     use Phoenix.Router, helpers: false
     use Pow.Phoenix.Router
+
     use Pow.Extension.Phoenix.Router,
       extensions: [Pow.Extension.Phoenix.RouterTest.ExtensionMock]
 
     scope "/", ExtensionMock.Phoenix, as: "pow_extension_phoenix_router_test_extension_mock" do
-      get "/test/:id/overridden", TestController, :edit
-      resources "/overridden/test", TestController, only: [:delete]
+      get("/test/:id/overridden", TestController, :edit)
+      resources("/overridden/test", TestController, only: [:delete])
     end
 
     scope "/" do
@@ -50,6 +53,7 @@ defmodule Pow.Extension.Phoenix.RouterTest do
         @moduledoc false
         use Phoenix.Router, helpers: false
         use Pow.Phoenix.Router
+
         use Pow.Extension.Phoenix.Router,
           extensions: [Pow.Extension.Phoenix.RouterTest.ExtensionMock]
 
@@ -77,12 +81,15 @@ defmodule Pow.Extension.Phoenix.RouterTest do
   end
 
   test "validates no aliases" do
-    assert unquote(module_raised_with) =~ "Pow routes should not be defined inside scopes with aliases: Test"
+    assert unquote(module_raised_with) =~
+             "Pow routes should not be defined inside scopes with aliases: Test"
+
     assert unquote(module_raised_with) =~ "scope \"/\", Test do"
   end
 
   test "can override routes" do
-    assert Enum.count(Router.phoenix_routes(), &(&1.plug == ExtensionMock.Phoenix.TestController)) == 6
+    assert Enum.count(Router.phoenix_routes(), &(&1.plug == ExtensionMock.Phoenix.TestController)) ==
+             6
 
     assert [route] = filter_routes(ExtensionMock.Phoenix.TestController, :edit)
     assert route.path == "/test/:id/overridden"
@@ -92,6 +99,6 @@ defmodule Pow.Extension.Phoenix.RouterTest do
   end
 
   defp filter_routes(plug, opts) do
-    Enum.filter(Router.phoenix_routes(), & &1.plug == plug && &1.plug_opts == opts)
+    Enum.filter(Router.phoenix_routes(), &(&1.plug == plug && &1.plug_opts == opts))
   end
 end

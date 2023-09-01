@@ -63,7 +63,8 @@ defmodule PowEmailConfirmation.Phoenix.ConfirmationControllerTest do
 
     test "when the same user is signed in", %{conn: conn} do
       session_id = conn.private[:plug_session][@session_key]
-      conn       =
+
+      conn =
         conn
         |> Pow.Plug.assign_current_user(%User{id: 1}, [])
         |> get(~p"/confirm-email/#{sign_token("valid")}")
@@ -75,7 +76,8 @@ defmodule PowEmailConfirmation.Phoenix.ConfirmationControllerTest do
 
     test "when the signed in user is different", %{conn: conn} do
       session_id = conn.private[:plug_session][@session_key]
-      conn       =
+
+      conn =
         conn
         |> Pow.Plug.assign_current_user(%User{id: 2}, [])
         |> get(~p"/confirm-email/#{sign_token("valid")}")

@@ -5,11 +5,11 @@ defmodule Pow.Phoenix.RegistrationController do
   alias Plug.Conn
   alias Pow.Plug
 
-  plug :require_not_authenticated when action in [:new, :create]
-  plug :require_authenticated when action in [:edit, :update, :delete]
-  plug :assign_create_path when action in [:new, :create]
-  plug :assign_update_path when action in [:edit, :update]
-  plug :put_no_cache_header when action in [:new]
+  plug(:require_not_authenticated when action in [:new, :create])
+  plug(:require_authenticated when action in [:edit, :update, :delete])
+  plug(:assign_create_path when action in [:new, :create])
+  plug(:assign_update_path when action in [:edit, :update])
+  plug(:put_no_cache_header when action in [:new])
 
   @spec process_new(Conn.t(), map()) :: {:ok, map(), Conn.t()}
   def process_new(conn, _params) do
@@ -34,6 +34,7 @@ defmodule Pow.Phoenix.RegistrationController do
     |> put_flash(:info, messages(conn).user_has_been_created(conn))
     |> redirect(to: routes(conn).after_registration_path(conn))
   end
+
   def respond_create({:error, changeset, conn}) do
     conn
     |> assign(:changeset, changeset)
@@ -63,6 +64,7 @@ defmodule Pow.Phoenix.RegistrationController do
     |> put_flash(:info, messages(conn).user_has_been_updated(conn))
     |> redirect(to: routes(conn).after_user_updated_path(conn))
   end
+
   def respond_update({:error, changeset, conn}) do
     conn
     |> assign(:changeset, changeset)
@@ -80,6 +82,7 @@ defmodule Pow.Phoenix.RegistrationController do
     |> put_flash(:info, messages(conn).user_has_been_deleted(conn))
     |> redirect(to: routes(conn).after_user_deleted_path(conn))
   end
+
   def respond_delete({:error, _changeset, conn}) do
     conn
     |> put_flash(:error, messages(conn).user_could_not_be_deleted(conn))

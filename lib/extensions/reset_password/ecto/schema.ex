@@ -14,9 +14,12 @@ defmodule PowResetPassword.Ecto.Schema do
   @impl true
   defmacro __using__(_config) do
     quote do
-      def reset_password_changeset(changeset, attrs), do: pow_reset_password_changeset(changeset, attrs)
+      def reset_password_changeset(changeset, attrs),
+        do: pow_reset_password_changeset(changeset, attrs)
 
-      defdelegate pow_reset_password_changeset(changeset, attrs), to: unquote(__MODULE__), as: :reset_password_changeset
+      defdelegate pow_reset_password_changeset(changeset, attrs),
+        to: unquote(__MODULE__),
+        as: :reset_password_changeset
 
       defoverridable reset_password_changeset: 2
     end

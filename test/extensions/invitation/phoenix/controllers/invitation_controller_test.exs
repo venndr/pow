@@ -111,7 +111,9 @@ defmodule PowInvitation.Phoenix.InvitationControllerTest do
       assert get_flash(conn, :info) == "An e-mail with invitation link has been sent."
     end
 
-    test "with valid params and email taken with pow_prevent_user_enumeration: false", %{conn: conn} do
+    test "with valid params and email taken with pow_prevent_user_enumeration: false", %{
+      conn: conn
+    } do
       conn =
         conn
         |> Conn.put_private(:pow_prevent_user_enumeration, false)
@@ -185,7 +187,9 @@ defmodule PowInvitation.Phoenix.InvitationControllerTest do
     test "shows", %{conn: conn} do
       conn = get(conn, ~p"/invitations/#{sign_token("valid")}/edit")
 
-      assert Conn.get_resp_header(conn, "cache-control") == ["no-cache, no-store, must-revalidate"]
+      assert Conn.get_resp_header(conn, "cache-control") == [
+               "no-cache, no-store, must-revalidate"
+             ]
 
       assert html = html_response(conn, 200)
 
@@ -213,9 +217,27 @@ defmodule PowInvitation.Phoenix.InvitationControllerTest do
 
   describe "update/2" do
     @password "password1234"
-    @valid_params %{"user" => %{"email" => "test@example.com", "password" => @password, "password_confirmation" => @password}}
-    @valid_params_email_taken %{"user" => %{"email" => "taken@example.com", "password" => @password, "password_confirmation" => @password}}
-    @invalid_params %{"user" => %{"email" => "invalid", "password" => @password, "password_confirmation" => "invalid"}}
+    @valid_params %{
+      "user" => %{
+        "email" => "test@example.com",
+        "password" => @password,
+        "password_confirmation" => @password
+      }
+    }
+    @valid_params_email_taken %{
+      "user" => %{
+        "email" => "taken@example.com",
+        "password" => @password,
+        "password_confirmation" => @password
+      }
+    }
+    @invalid_params %{
+      "user" => %{
+        "email" => "invalid",
+        "password" => @password,
+        "password_confirmation" => "invalid"
+      }
+    }
 
     test "already signed in", %{conn: conn} do
       conn =
@@ -274,7 +296,10 @@ defmodule PowInvitation.Phoenix.InvitationControllerTest do
       assert DOM.to_text(error_elem) =~ "has invalid format"
 
       assert [input_elem] = DOM.all(html_tree, "input[name=\"user[password_confirmation]\"]")
-      assert [error_elem] = DOM.all(html_tree, "*[phx-feedback-for=\"user[password_confirmation]\"] > p")
+
+      assert [error_elem] =
+               DOM.all(html_tree, "*[phx-feedback-for=\"user[password_confirmation]\"] > p")
+
       assert DOM.attribute(input_elem, "value") == "invalid"
       assert DOM.to_text(error_elem) =~ "does not match confirmation"
 

@@ -38,13 +38,11 @@ defmodule Pow.MixProject do
       {:phoenix_html, ">= 2.0.0 and < 4.0.0"},
       {:plug, ">= 1.5.0 and < 2.0.0", optional: true},
       {:phoenix_live_view, ">= 0.18.0", optional: true},
-
       {:phoenix_ecto, "~> 4.3", only: [:dev, :test]},
       {:credo, "~> 1.5", only: [:dev, :test]},
-      {:jason, "~> 1.2", only: [:dev, :test]}, # Credo requires jason to exist also in :dev
-
+      # Credo requires jason to exist also in :dev
+      {:jason, "~> 1.2", only: [:dev, :test]},
       {:ex_doc, "~> 0.25", only: :dev},
-
       {:ecto_sql, "~> 3.5", only: [:test]},
       {:plug_cowboy, "~> 2.4", only: [:test]},
       {:postgrex, "~> 0.15", only: [:test]},
@@ -107,10 +105,10 @@ defmodule Pow.MixProject do
         "Phoenix extension": ~r/^Pow.Extension.Phoenix/,
         "Store handling": ~r/^Pow.Store/,
         "Mix helpers": ~r/^Mix.Pow/,
-        "PowEmailConfirmation": ~r/^PowEmailConfirmation/,
-        "PowPersistentSession": ~r/^PowPersistentSession/,
-        "PowResetPassword": ~r/^PowResetPassword/,
-        "PowInvitation": ~r/^PowInvitation/
+        PowEmailConfirmation: ~r/^PowEmailConfirmation/,
+        PowPersistentSession: ~r/^PowPersistentSession/,
+        PowResetPassword: ~r/^PowResetPassword/,
+        PowInvitation: ~r/^PowInvitation/
       ],
       groups_for_extras: [
         Extensions: Path.wildcard("lib/extensions/*/README.md"),

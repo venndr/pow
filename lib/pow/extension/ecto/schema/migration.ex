@@ -24,10 +24,10 @@ defmodule Pow.Extension.Ecto.Schema.Migration do
   """
   @spec new(atom(), atom(), binary(), Config.t()) :: map()
   def new(extension, context_base, schema_plural, config \\ []) do
-    repo           = Config.get(config, :repo, Module.concat([context_base, "Repo"]))
-    config         = Config.put(config, :extensions, [extension])
-    attrs          = attrs(config, schema_plural: schema_plural)
-    indexes        = Schema.indexes(config)
+    repo = Config.get(config, :repo, Module.concat([context_base, "Repo"]))
+    config = Config.put(config, :extensions, [extension])
+    attrs = attrs(config, schema_plural: schema_plural)
+    indexes = Schema.indexes(config)
     migration_name = name(extension, schema_plural)
 
     Migration.schema(context_base, repo, schema_plural, migration_name, attrs, indexes, config)
@@ -47,8 +47,10 @@ defmodule Pow.Extension.Ecto.Schema.Migration do
   end
 
   defp attr_from_assoc({:belongs_to, name, :users, field_options, migration_options}, opts) do
-    {String.to_atom("#{name}_id"), {:references, opts[:schema_plural]}, field_options, migration_options}
+    {String.to_atom("#{name}_id"), {:references, opts[:schema_plural]}, field_options,
+     migration_options}
   end
+
   defp attr_from_assoc(_assoc, _opts), do: nil
 
   defp name(extension, table) do

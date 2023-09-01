@@ -32,7 +32,8 @@ for extension <- Application.get_env(:pow, :extension_test_modules) do
       formats: [html: Pow.Test.Phoenix.ErrorHTML],
       layout: false
     ],
-    secret_key_base: String.duplicate("abcdefghijklmnopqrstuvxyz0123456789", 2))
+    secret_key_base: String.duplicate("abcdefghijklmnopqrstuvxyz0123456789", 2)
+  )
 
   {:ok, _pid} = endpoint_module.start_link()
 end

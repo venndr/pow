@@ -34,14 +34,17 @@ defmodule Mix.Tasks.Pow.Ecto.Gen.SchemaTest do
     File.cd!(context.tmp_path, fn ->
       Schema.run([])
 
-      assert_raise Mix.Error, "schema file can't be created, there is already a schema file in lib/pow/users/user.ex.", fn ->
-        Schema.run([])
-      end
+      assert_raise Mix.Error,
+                   "schema file can't be created, there is already a schema file in lib/pow/users/user.ex.",
+                   fn ->
+                     Schema.run([])
+                   end
     end)
   end
 
   test "generates with `:generators` config", context do
     Application.put_env(:pow, :generators, binary_id: true, context_app: {:my_app, "my_app"})
+
     on_exit(fn ->
       Application.delete_env(:pow, :generators)
     end)

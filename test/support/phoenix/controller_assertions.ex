@@ -11,7 +11,9 @@ defmodule Pow.Test.Phoenix.ControllerAssertions do
       routes = Keyword.get(unquote(conn).private.pow_config, :routes_backend, Routes)
 
       assert redirected_to(unquote(conn)) == routes.after_sign_in_path(unquote(conn))
-      assert get_flash(unquote(conn), :error) == Messages.user_already_authenticated(unquote(conn))
+
+      assert get_flash(unquote(conn), :error) ==
+               Messages.user_already_authenticated(unquote(conn))
     end
   end
 
@@ -21,7 +23,7 @@ defmodule Pow.Test.Phoenix.ControllerAssertions do
       expected_path =
         case conn.method do
           "GET" -> ~p"/session/new?#{[request_path: Phoenix.Controller.current_path(conn)]}"
-          _any  -> ~p"/session/new"
+          _any -> ~p"/session/new"
         end
 
       assert redirected_to(conn) == expected_path

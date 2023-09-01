@@ -18,7 +18,7 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     def validate!(_config, module) do
       case module.pow_user_id_field() do
         :email -> :ok
-        _      -> raise "User ID field error"
+        _ -> raise "User ID field error"
       end
     end
 
@@ -41,7 +41,7 @@ defmodule Pow.Extension.Ecto.SchemaTest do
 
       case Changeset.get_field(changeset, :custom) do
         "error" -> Changeset.add_error(changeset, :custom, "custom error")
-        _       -> changeset
+        _ -> changeset
       end
     end
 
@@ -56,6 +56,7 @@ defmodule Pow.Extension.Ecto.SchemaTest do
   defmodule User do
     use Ecto.Schema
     use Pow.Ecto.Schema
+
     use Pow.Extension.Ecto.Schema,
       extensions: [Pow.Extension.Ecto.SchemaTest.ExtensionMock]
 
@@ -78,8 +79,10 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     try do
       defmodule InvalidUser do
         use Ecto.Schema
+
         use Pow.Ecto.Schema,
           user_id_field: :username
+
         use Pow.Extension.Ecto.Schema,
           extensions: [Pow.Extension.Ecto.SchemaTest.ExtensionMock]
 
@@ -107,7 +110,9 @@ defmodule Pow.Extension.Ecto.SchemaTest do
     assert Map.has_key?(user, :children)
 
     assert %Ecto.Association.BelongsTo{queryable: User} = User.__schema__(:association, :parent)
-    assert %Ecto.Association.Has{cardinality: :many, queryable: User, related_key: :parent_id} = User.__schema__(:association, :children)
+
+    assert %Ecto.Association.Has{cardinality: :many, queryable: User, related_key: :parent_id} =
+             User.__schema__(:association, :children)
   end
 
   @password "secret1234"
@@ -137,8 +142,10 @@ defmodule Pow.Extension.Ecto.SchemaTest do
   end
 
   test "require_schema_field!/3" do
-    assert_raise Schema.SchemaError, "A `:missing_field` schema field should be defined in #{inspect User} to use CustomExtension", fn ->
-      Schema.require_schema_field!(User, :missing_field, CustomExtension)
-    end
+    assert_raise Schema.SchemaError,
+                 "A `:missing_field` schema field should be defined in #{inspect(User)} to use CustomExtension",
+                 fn ->
+                   Schema.require_schema_field!(User, :missing_field, CustomExtension)
+                 end
   end
 end

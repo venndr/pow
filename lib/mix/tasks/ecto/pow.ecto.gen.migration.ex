@@ -52,8 +52,8 @@ defmodule Mix.Tasks.Pow.Ecto.Gen.Migration do
 
   defp create_migration_files(%{repo: repo, binary_id: binary_id, schema_plural: schema_plural}) do
     context_base = Pow.app_base(Pow.otp_app())
-    schema       = SchemaMigration.new(context_base, schema_plural, repo: repo, binary_id: binary_id)
-    content      = SchemaMigration.gen(schema)
+    schema = SchemaMigration.new(context_base, schema_plural, repo: repo, binary_id: binary_id)
+    content = SchemaMigration.gen(schema)
 
     Migration.create_migration_file(repo, schema.migration_name, content)
   end

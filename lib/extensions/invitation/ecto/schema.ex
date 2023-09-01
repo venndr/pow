@@ -85,13 +85,19 @@ defmodule PowInvitation.Ecto.Schema do
   @impl true
   defmacro __using__(_config) do
     quote do
-      def invite_changeset(changeset, invited_by, attrs), do: pow_invite_changeset(changeset, invited_by, attrs)
+      def invite_changeset(changeset, invited_by, attrs),
+        do: pow_invite_changeset(changeset, invited_by, attrs)
 
-      defdelegate pow_invite_changeset(changeset, invited_by, attrs), to: unquote(__MODULE__), as: :invite_changeset
+      defdelegate pow_invite_changeset(changeset, invited_by, attrs),
+        to: unquote(__MODULE__),
+        as: :invite_changeset
 
-      def accept_invitation_changeset(changeset, attrs), do: pow_accept_invitation_changeset(changeset, attrs)
+      def accept_invitation_changeset(changeset, attrs),
+        do: pow_accept_invitation_changeset(changeset, attrs)
 
-      defdelegate pow_accept_invitation_changeset(changeset, attrs), to: unquote(__MODULE__), as: :accept_invitation_changeset
+      defdelegate pow_accept_invitation_changeset(changeset, attrs),
+        to: unquote(__MODULE__),
+        as: :accept_invitation_changeset
 
       defoverridable invite_changeset: 3, accept_invitation_changeset: 2
     end
@@ -118,6 +124,7 @@ defmodule PowInvitation.Ecto.Schema do
     |> invitation_token_changeset()
     |> invited_by_changeset(invited_by)
   end
+
   def invite_changeset(user, invited_by, attrs) do
     user
     |> Changeset.change()
@@ -143,6 +150,7 @@ defmodule PowInvitation.Ecto.Schema do
 
     Changeset.assoc_constraint(%{changeset | data: data}, :invited_by)
   end
+
   def invited_by_changeset(user, invited_by) do
     user
     |> Changeset.change()
@@ -164,6 +172,7 @@ defmodule PowInvitation.Ecto.Schema do
     |> user_mod.changeset(attrs)
     |> Changeset.change(invitation_accepted_at: accepted_at)
   end
+
   def accept_invitation_changeset(user, attrs) do
     user
     |> Changeset.change()

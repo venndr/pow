@@ -11,7 +11,7 @@ defmodule Pow.Test.EtsCacheMock do
     |> :ets.lookup(ets_key)
     |> case do
       [{^ets_key, value} | _rest] -> value
-      []                          -> :not_found
+      [] -> :not_found
     end
   end
 
@@ -22,10 +22,12 @@ defmodule Pow.Test.EtsCacheMock do
   end
 
   def put(config, record_or_records) do
-    records     = List.wrap(record_or_records)
-    ets_records = Enum.map(records, fn {key, value} ->
-      {ets_key(config, key), value}
-    end)
+    records = List.wrap(record_or_records)
+
+    ets_records =
+      Enum.map(records, fn {key, value} ->
+        {ets_key(config, key), value}
+      end)
 
     send(self(), {:ets, :put, records, config})
     :ets.insert(@tab, ets_records)

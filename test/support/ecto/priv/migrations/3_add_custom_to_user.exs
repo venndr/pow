@@ -3,7 +3,7 @@ defmodule Pow.Test.Ecto.Repo.Migrations.AddCustomToUser do
 
   def change do
     alter table(:users) do
-      add :custom, :string
+      add(:custom, :string)
     end
   end
 end

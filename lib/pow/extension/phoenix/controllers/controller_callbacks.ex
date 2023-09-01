@@ -20,7 +20,7 @@ defmodule Pow.Extension.Phoenix.ControllerCallbacks do
       |> controller_callbacks_modules()
       |> Enum.reduce(results, fn
         _extension, {:halt, conn} -> {:halt, conn}
-        extension, results        -> extension.unquote(hook)(controller, action, results, config)
+        extension, results -> extension.unquote(hook)(controller, action, results, config)
       end)
     end
   end

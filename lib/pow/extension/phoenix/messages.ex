@@ -70,7 +70,12 @@ defmodule Pow.Extension.Phoenix.Messages do
 
       for {fallback_function, 1} <- functions do
         function_name = unquote(__MODULE__).Helpers.function_name(extension, fallback_function)
-        unquote(__MODULE__).__define_message_function__(extension, function_name, fallback_function)
+
+        unquote(__MODULE__).__define_message_function__(
+          extension,
+          function_name,
+          fallback_function
+        )
       end
 
       unquote(__MODULE__).__define_fallback_module__(extension, functions)
@@ -79,7 +84,11 @@ defmodule Pow.Extension.Phoenix.Messages do
 
   @doc false
   defmacro __define_message_function__(extension, function_name, fallback_function) do
-    quote bind_quoted: [extension: extension, function_name: function_name, fallback_function: fallback_function] do
+    quote bind_quoted: [
+            extension: extension,
+            function_name: function_name,
+            fallback_function: fallback_function
+          ] do
       def unquote(function_name)(conn) do
         unquote(extension).unquote(fallback_function)(conn)
       end
@@ -91,16 +100,18 @@ defmodule Pow.Extension.Phoenix.Messages do
   @doc false
   defmacro __define_fallback_module__(extension, functions) do
     quote do
-      name   = Module.concat([__MODULE__, unquote(extension)])
-      quoted = for {function, 1} <- unquote(functions) do
-        function_name = unquote(__MODULE__).Helpers.function_name(unquote(extension), function)
+      name = Module.concat([__MODULE__, unquote(extension)])
 
-        quote do
-          def unquote(function)(conn) do
-            unquote(__MODULE__).unquote(function_name)(conn)
+      quoted =
+        for {function, 1} <- unquote(functions) do
+          function_name = unquote(__MODULE__).Helpers.function_name(unquote(extension), function)
+
+          quote do
+            def unquote(function)(conn) do
+              unquote(__MODULE__).unquote(function_name)(conn)
+            end
           end
         end
-      end
 
       Module.create(name, quoted, Macro.Env.location(__ENV__))
     end

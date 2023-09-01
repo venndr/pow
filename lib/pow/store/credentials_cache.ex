@@ -108,9 +108,10 @@ defmodule Pow.Store.CredentialsCache do
   @spec put(Base.config(), binary(), {map(), list()}) :: :ok
   def put(config, session_id, {user, metadata}) do
     {struct, id} = user_to_struct_id!(user, [])
-    user_key     = [struct, :user, id]
-    session_key  = [struct, :user, id, :session, session_id]
-    records      = [
+    user_key = [struct, :user, id]
+    session_key = [struct, :user, id, :session, session_id]
+
+    records = [
       {session_id, {user_key, metadata}},
       {user_key, user},
       {session_key, :os.system_time(:millisecond)}
@@ -128,10 +129,9 @@ defmodule Pow.Store.CredentialsCache do
 
   defp warn_maximum_timeout(config) do
     if Config.get(config, :ttl, 0) > @recommended_max_idle_timeout do
-      IO.warn(
-        """
-        warning: `:ttl` value for sessions should be no longer than #{round(@recommended_max_idle_timeout / 1_000 / 60)} minutes to prevent session hijack, please consider lowering the value
-        """)
+      IO.warn("""
+      warning: `:ttl` value for sessions should be no longer than #{round(@recommended_max_idle_timeout / 1_000 / 60)} minutes to prevent session hijack, please consider lowering the value
+      """)
     end
 
     config
@@ -176,9 +176,10 @@ defmodule Pow.Store.CredentialsCache do
   def get(config, session_id) do
     backend_config = backend_config(config)
 
-    with {user_key, metadata} when is_list(user_key) <- Base.get(config, backend_config, session_id),
-         user when is_map(user)                      <- Base.get(config, backend_config, user_key),
-         user when not is_nil(user)                  <- maybe_reload(user, config) do
+    with {user_key, metadata} when is_list(user_key) <-
+           Base.get(config, backend_config, session_id),
+         user when is_map(user) <- Base.get(config, backend_config, user_key),
+         user when not is_nil(user) <- maybe_reload(user, config) do
       {user, metadata}
     else
       # TODO: Remove by 1.1.0
@@ -196,21 +197,25 @@ defmodule Pow.Store.CredentialsCache do
     end
   end
 
-  defp fetch_pow_config!(config), do: Keyword.get(config, :pow_config) || raise "No `:pow_config` value found in the store config."
+  defp fetch_pow_config!(config),
+    do:
+      Keyword.get(config, :pow_config) ||
+        raise("No `:pow_config` value found in the store config.")
 
   defp user_to_struct_id!(%mod{} = user, config) do
     key_values =
       user
       |> fetch_primary_key_values!(config)
-      |> Enum.sort(&elem(&1, 0) < elem(&2, 0))
+      |> Enum.sort(&(elem(&1, 0) < elem(&2, 0)))
       |> case do
         [id: id] -> id
-        clauses  -> clauses
+        clauses -> clauses
       end
 
     {mod, key_values}
   end
-  defp user_to_struct_id!(_user, _config), do: raise "Only structs can be stored as credentials"
+
+  defp user_to_struct_id!(_user, _config), do: raise("Only structs can be stored as credentials")
 
   defp fetch_primary_key_values!(user, config) do
     pow_config = Keyword.get(config, :pow_config)
@@ -219,13 +224,13 @@ defmodule Pow.Store.CredentialsCache do
     |> Operations.fetch_primary_key_values(pow_config)
     |> case do
       {:error, error} -> raise error
-      {:ok, clauses}  -> clauses
+      {:ok, clauses} -> clauses
     end
   end
 
   defp delete_user_sessions_with_fingerprint(config, user, metadata) do
     case Keyword.get(metadata, :fingerprint) do
-      nil         -> :ok
+      nil -> :ok
       fingerprint -> do_delete_user_sessions_with_fingerprint(config, user, fingerprint)
     end
   end
@@ -236,7 +241,8 @@ defmodule Pow.Store.CredentialsCache do
     config
     |> sessions(user)
     |> Enum.each(fn session_id ->
-      with {_user_key, metadata} when is_list(metadata) <- Base.get(config, backend_config, session_id),
+      with {_user_key, metadata} when is_list(metadata) <-
+             Base.get(config, backend_config, session_id),
            ^fingerprint <- Keyword.get(metadata, :fingerprint) do
         delete(config, session_id)
       end

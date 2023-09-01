@@ -15,8 +15,13 @@ defmodule PowEmailConfirmation.Ecto.Context do
   Checks if the users current e-mail is unconfirmed.
   """
   @spec current_email_unconfirmed?(Context.user(), Config.t()) :: boolean()
-  def current_email_unconfirmed?(%{unconfirmed_email: nil, email_confirmation_token: token, email_confirmed_at: nil}, _config) when not is_nil(token),
-    do: true
+  def current_email_unconfirmed?(
+        %{unconfirmed_email: nil, email_confirmation_token: token, email_confirmed_at: nil},
+        _config
+      )
+      when not is_nil(token),
+      do: true
+
   def current_email_unconfirmed?(_user, _config),
     do: false
 
@@ -24,8 +29,10 @@ defmodule PowEmailConfirmation.Ecto.Context do
   Checks if the user has a pending e-mail change.
   """
   @spec pending_email_change?(Context.user(), Config.t()) :: boolean()
-  def pending_email_change?(%{unconfirmed_email: email, email_confirmation_token: token}, _config) when not is_nil(email) and not is_nil(token),
-    do: true
+  def pending_email_change?(%{unconfirmed_email: email, email_confirmation_token: token}, _config)
+      when not is_nil(email) and not is_nil(token),
+      do: true
+
   def pending_email_change?(_user, _config), do: false
 
   @doc """
@@ -33,7 +40,8 @@ defmodule PowEmailConfirmation.Ecto.Context do
 
   See `PowEmailConfirmation.Ecto.Schema.confirm_email_changeset/2`.
   """
-  @spec confirm_email(Context.user(), map(), Config.t()) :: {:ok, Context.user()} | {:error, Context.changeset()}
+  @spec confirm_email(Context.user(), map(), Config.t()) ::
+          {:ok, Context.user()} | {:error, Context.changeset()}
   def confirm_email(%user_mod{} = user, params, config) do
     user
     |> user_mod.confirm_email_changeset(params)

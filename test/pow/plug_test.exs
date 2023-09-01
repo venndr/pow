@@ -17,9 +17,11 @@ defmodule Pow.PlugTest do
   @admin_config Config.put(@default_config, :current_user_assigns_key, :current_admin_user)
 
   test "current_user/1" do
-    assert_raise ConfigError, "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.", fn ->
-      Plug.current_user(%Conn{private: %{}, assigns: %{}})
-    end
+    assert_raise ConfigError,
+                 "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.",
+                 fn ->
+                   Plug.current_user(%Conn{private: %{}, assigns: %{}})
+                 end
 
     user = %{id: 1}
     conn = %Conn{assigns: %{current_user: user}, private: %{pow_config: @default_config}}
@@ -42,9 +44,14 @@ defmodule Pow.PlugTest do
   test "assign_current_user/3" do
     user = %{id: 1}
     conn = %Conn{assigns: %{}}
-    assert Plug.assign_current_user(conn, %{id: 1}, @default_config) == %Conn{assigns: %{current_user: user}}
 
-    assert Plug.assign_current_user(conn, %{id: 1}, @admin_config) == %Conn{assigns: %{current_admin_user: user}}
+    assert Plug.assign_current_user(conn, %{id: 1}, @default_config) == %Conn{
+             assigns: %{current_user: user}
+           }
+
+    assert Plug.assign_current_user(conn, %{id: 1}, @admin_config) == %Conn{
+             assigns: %{current_admin_user: user}
+           }
   end
 
   test "authenticate_user/2" do
@@ -55,7 +62,9 @@ defmodule Pow.PlugTest do
     refute fetch_session_id(conn)
     refute Plug.current_user(conn)
 
-    assert {:ok, loaded_conn} = Plug.authenticate_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+    assert {:ok, loaded_conn} =
+             Plug.authenticate_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+
     assert user = Plug.current_user(loaded_conn)
     assert user.id == 1
     assert fetch_session_id(loaded_conn)
@@ -63,7 +72,12 @@ defmodule Pow.PlugTest do
     assert {:error, conn} = Plug.authenticate_user(conn, %{})
     refute Plug.current_user(conn)
 
-    assert {:error, conn} = Plug.authenticate_user(conn, %{"email" => "invalid@example.com", "password" => "invalid"})
+    assert {:error, conn} =
+             Plug.authenticate_user(conn, %{
+               "email" => "invalid@example.com",
+               "password" => "invalid"
+             })
+
     refute Plug.current_user(conn)
   end
 
@@ -80,9 +94,14 @@ defmodule Pow.PlugTest do
   end
 
   test "authenticate_user/2 with missing plug config" do
-    assert_raise ConfigError, "Pow plug was not found in config. Please use a Pow plug that puts the `:plug` in the Pow configuration.", fn ->
-      Plug.authenticate_user(conn(), %{"email" => "mock@example.com", "password" => "secret"})
-    end
+    assert_raise ConfigError,
+                 "Pow plug was not found in config. Please use a Pow plug that puts the `:plug` in the Pow configuration.",
+                 fn ->
+                   Plug.authenticate_user(conn(), %{
+                     "email" => "mock@example.com",
+                     "password" => "secret"
+                   })
+                 end
   end
 
   test "change_user/2" do
@@ -103,7 +122,9 @@ defmodule Pow.PlugTest do
     refute Plug.current_user(conn)
     refute fetch_session_id(conn)
 
-    assert {:ok, user, conn} = Plug.create_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+    assert {:ok, user, conn} =
+             Plug.create_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+
     assert Plug.current_user(conn) == user
     assert fetch_session_id(conn)
   end
@@ -119,7 +140,9 @@ defmodule Pow.PlugTest do
     assert Plug.current_user(conn) == user
     assert fetch_session_id(conn) == session_id
 
-    assert {:ok, updated_user, conn} = Plug.update_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+    assert {:ok, updated_user, conn} =
+             Plug.update_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+
     assert updated_user.id == :updated
     assert Plug.current_user(conn) == updated_user
     refute updated_user == user
@@ -146,7 +169,12 @@ defmodule Pow.PlugTest do
 
     signed_token = Plug.sign_token(conn, "salt", "token")
 
-    assert Plug.verify_token(%{conn | secret_key_base: conn.secret_key_base <> "invalid"}, "salt", signed_token) == :error
+    assert Plug.verify_token(
+             %{conn | secret_key_base: conn.secret_key_base <> "invalid"},
+             "salt",
+             signed_token
+           ) == :error
+
     assert Plug.verify_token(conn, "invalid", signed_token) == :error
     assert Plug.verify_token(conn, "salt", "invalid") == :error
     assert Plug.verify_token(conn, "salt", signed_token) == {:ok, "token"}
@@ -154,14 +182,25 @@ defmodule Pow.PlugTest do
 
   test "extension_enabled?/2" do
     refute Plug.extension_enabled?(conn(@default_config), PowResetPassword)
-    assert Plug.extension_enabled?(conn(@default_config ++ [extensions: [PowResetPassword]]), PowResetPassword)
-    refute Plug.extension_enabled?(conn(@default_config ++ [extensions: [PowResetPassword]]), PowEmailConfirmation)
+
+    assert Plug.extension_enabled?(
+             conn(@default_config ++ [extensions: [PowResetPassword]]),
+             PowResetPassword
+           )
+
+    refute Plug.extension_enabled?(
+             conn(@default_config ++ [extensions: [PowResetPassword]]),
+             PowEmailConfirmation
+           )
   end
 
   defp auth_user_conn() do
-    conn        = conn_with_session_plug()
-    {:ok, conn} = Plug.authenticate_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
-    conn        = Conn.send_resp(conn, 200, "")
+    conn = conn_with_session_plug()
+
+    {:ok, conn} =
+      Plug.authenticate_user(conn, %{"email" => "mock@example.com", "password" => "secret"})
+
+    conn = Conn.send_resp(conn, 200, "")
 
     conn()
     |> Test.recycle_cookies(conn)

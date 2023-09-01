@@ -6,7 +6,7 @@ defmodule PowEmailConfirmation.Phoenix.Router do
 
   defmacro routes(_config) do
     quote location: :keep do
-      Router.pow_resources "/confirm-email", ConfirmationController, only: [:show]
+      Router.pow_resources("/confirm-email", ConfirmationController, only: [:show])
     end
   end
 end

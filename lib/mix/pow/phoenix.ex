@@ -10,11 +10,11 @@ defmodule Mix.Pow.Phoenix do
   """
   @spec parse_structure(map()) :: map()
   def parse_structure(config) do
-    otp_app      = Pow.otp_app()
-    context_app  = Map.get(config, :context_app) || context_app(otp_app)
+    otp_app = Pow.otp_app()
+    context_app = Map.get(config, :context_app) || context_app(otp_app)
     context_base = Pow.app_base(context_app)
-    web_base     = web_base(context_app, otp_app, context_base)
-    web_prefix   = web_prefix(context_app, otp_app)
+    web_base = web_base(context_app, otp_app, context_base)
+    web_prefix = web_prefix(context_app, otp_app)
 
     %{
       context_app: context_app,
@@ -30,10 +30,10 @@ defmodule Mix.Pow.Phoenix do
     |> Application.get_env(:generators, [])
     |> Keyword.get(:context_app)
     |> case do
-      nil          -> otp_app
-      false        -> Mix.raise("No context_app configured for current application")
+      nil -> otp_app
+      false -> Mix.raise("No context_app configured for current application")
       {app, _path} -> app
-      app          -> app
+      app -> app
     end
   end
 
@@ -48,7 +48,8 @@ defmodule Mix.Pow.Phoenix do
   """
   @spec create_template_module(atom(), binary(), atom(), binary()) :: :ok
   def create_template_module(module, name, web_mod, web_prefix) do
-    path    = Path.join([web_prefix, "controllers", Macro.underscore(module), "#{name}_html.ex"])
+    path = Path.join([web_prefix, "controllers", Macro.underscore(module), "#{name}_html.ex"])
+
     content = """
     defmodule #{inspect(web_mod)}.#{inspect(module)}.#{Macro.camelize(name)}HTML do
       use #{inspect(web_mod)}, :html
@@ -68,12 +69,12 @@ defmodule Mix.Pow.Phoenix do
   @spec create_templates(atom(), binary(), binary(), [binary()]) :: :ok
   def create_templates(module, name, web_prefix, actions) do
     template_module = Module.concat([module, Phoenix, "#{Macro.camelize(name)}HTML"])
-    path            = Path.join([web_prefix, "controllers", Macro.underscore(module), "#{name}_html"])
+    path = Path.join([web_prefix, "controllers", Macro.underscore(module), "#{name}_html"])
 
     actions
     |> Enum.map(&String.to_atom/1)
     |> Enum.each(fn action ->
-      content   = template_module.html(action)
+      content = template_module.html(action)
       file_path = Path.join(path, "#{action}.html.heex")
 
       Generator.create_file(file_path, content)

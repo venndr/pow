@@ -16,10 +16,13 @@ defmodule Mix.Pow.Extension do
   defp maybe_fetch_otp_app_extensions([], otp_app) do
     Config.get([otp_app: otp_app], :extensions, [])
   end
+
   defp maybe_fetch_otp_app_extensions(extensions, _otp_app), do: extensions
 
   @spec no_extensions_error(atom()) :: :ok
   def no_extensions_error(otp_app) do
-    Mix.shell.error("No extensions was provided as arguments, or found in `config :#{otp_app}, :pow` configuration.")
+    Mix.shell().error(
+      "No extensions was provided as arguments, or found in `config :#{otp_app}, :pow` configuration."
+    )
   end
 end

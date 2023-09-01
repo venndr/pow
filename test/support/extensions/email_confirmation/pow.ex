@@ -4,7 +4,8 @@ defmodule PowEmailConfirmation.Test do
     extensions: [PowEmailConfirmation]
 
   extensions = [PowEmailConfirmation, PowInvitation]
-  context    = PowEmailConfirmation.PowInvitation.Test
+  context = PowEmailConfirmation.PowInvitation.Test
+
   config =
     @config
     |> Keyword.put(:extensions, extensions)

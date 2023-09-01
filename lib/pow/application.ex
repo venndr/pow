@@ -11,6 +11,7 @@ defmodule Pow.Application do
     children = [
       Pow.Store.Backend.EtsCache
     ]
+
     opts = [
       strategy: :one_for_one,
       name: Pow.Supervisor

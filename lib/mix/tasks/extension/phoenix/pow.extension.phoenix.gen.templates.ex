@@ -33,10 +33,10 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.Templates do
   end
 
   defp create_template_files({config, _parsed, _invalid}) do
-    structure  = Phoenix.parse_structure(config)
+    structure = Phoenix.parse_structure(config)
     web_module = structure[:web_module]
     web_prefix = structure[:web_prefix]
-    web_app    = structure[:web_app]
+    web_app = structure[:web_app]
 
     extensions =
       config
@@ -48,7 +48,10 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.Templates do
           rescue
             # TODO: Remove or refactor by 1.1.0
             _e in UndefinedFunctionError ->
-              IO.warn("no #{inspect extension} base module to check for Phoenix templates support, please use #{inspect __MODULE__} to implement it")
+              IO.warn(
+                "no #{inspect(extension)} base module to check for Phoenix templates support, please use #{inspect(__MODULE__)} to implement it"
+              )
+
               []
           end
 
@@ -61,8 +64,11 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.Templates do
   end
 
   defp create_templates(extension, [], _web_module, _web_prefix) do
-    Mix.shell().info("Notice: No template files will be generated for #{inspect extension} as this extension doesn't have any templates defined.")
+    Mix.shell().info(
+      "Notice: No template files will be generated for #{inspect(extension)} as this extension doesn't have any templates defined."
+    )
   end
+
   defp create_templates(extension, templates, web_module, web_prefix) do
     Enum.each(templates, fn {name, actions} ->
       Phoenix.create_template_module(extension, name, web_module, web_prefix)
@@ -73,5 +79,6 @@ defmodule Mix.Tasks.Pow.Extension.Phoenix.Gen.Templates do
   defp print_shell_instructions(%{extensions: [], web_app: web_app}) do
     Extension.no_extensions_error(web_app)
   end
+
   defp print_shell_instructions(config), do: config
 end

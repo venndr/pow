@@ -12,14 +12,16 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
 
   setup context do
     File.cd!(context.tmp_path, fn ->
-      File.write!(context.paths.config_path,
+      File.write!(
+        context.paths.config_path,
         """
         import Config
 
         config :#{Macro.underscore(context.context_module)}, :pow,
           user: #{context.context_module}.Users.User,
           repo: #{context.context_module}.Repo
-        """)
+        """
+      )
     end)
 
     :ok
@@ -30,7 +32,7 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
       Templates.run([])
 
       templates_path = Path.join(["lib", "pow_web", "controllers", "pow"])
-      expected_dirs  = Map.keys(@expected_template_files)
+      expected_dirs = Map.keys(@expected_template_files)
       expected_files = Enum.map(expected_dirs, &"#{&1}.ex")
 
       assert expected_dirs -- ls(templates_path) == []
@@ -43,7 +45,7 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
       end
 
       for base_name <- expected_dirs do
-        content     = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
+        content = templates_path |> Path.join(base_name <> ".ex") |> File.read!()
         module_name = base_name |> Macro.camelize() |> String.replace_suffix("Html", "HTML")
 
         assert content =~ "defmodule PowWeb.Pow.#{module_name} do"
@@ -54,13 +56,12 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
       assert_received {:mix_shell, :info, ["* injecting config/config.exs"]}
       assert_received {:mix_shell, :info, [@success_msg]}
 
-      expected_config =
-        """
-        config :pow, :pow,
-          web_module: PowWeb,
-          user: Pow.Users.User,
-          repo: Pow.Repo
-        """
+      expected_config = """
+      config :pow, :pow,
+        web_module: PowWeb,
+        user: Pow.Users.User,
+        repo: Pow.Repo
+      """
 
       assert File.read!("config/config.exs") =~ expected_config
     end)
@@ -70,9 +71,11 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
     File.cd!(context.tmp_path, fn ->
       File.rm_rf!(context.paths.config_path)
 
-      assert_raise Mix.Error, "Couldn't configure Pow! Did you run this inside your Phoenix app?", fn ->
-        Templates.run([])
-      end
+      assert_raise Mix.Error,
+                   "Couldn't configure Pow! Did you run this inside your Phoenix app?",
+                   fn ->
+                     Templates.run([])
+                   end
 
       assert_received {:mix_shell, :error, ["Could not find the following file(s):" <> msg]}
       assert msg =~ context.paths.config_path
@@ -127,6 +130,7 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.TemplatesTest do
 
   test "generates instructions with `:generators` config", context do
     Application.put_env(:pow, :generators, context_app: {:my_app, "my_app"})
+
     on_exit(fn ->
       Application.delete_env(:pow, :generators)
     end)

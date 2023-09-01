@@ -8,8 +8,8 @@ defmodule PowPersistentSession.Store.PersistentSessionCacheTest do
   alias Pow.Test.EtsCacheMock
 
   defmodule ContextMock do
-    def get_by([id: :missing]), do: nil
-    def get_by([id: id]), do: %User{id: {:loaded, id}}
+    def get_by(id: :missing), do: nil
+    def get_by(id: id), do: %User{id: {:loaded, id}}
   end
 
   @config [backend: EtsCacheMock, pow_config: [users_context: ContextMock]]
@@ -69,7 +69,9 @@ defmodule PowPersistentSession.Store.PersistentSessionCacheTest do
     PersistentSessionCache.put(store_config, "token", {user_1, a: 1})
 
     assert CaptureIO.capture_io(:stderr, fn ->
-      assert PersistentSessionCache.get(Keyword.delete(@config, :pow_config), "token") == {user_1, a: 1}
-    end) =~ "PowPersistentSession.Store.PersistentSessionCache.get/2 call without `:pow_config` in second argument is deprecated, find the migration step in the changelog."
+             assert PersistentSessionCache.get(Keyword.delete(@config, :pow_config), "token") ==
+                      {user_1, a: 1}
+           end) =~
+             "PowPersistentSession.Store.PersistentSessionCache.get/2 call without `:pow_config` in second argument is deprecated, find the migration step in the changelog."
   end
 end

@@ -28,6 +28,7 @@ defmodule Pow.Extension.Phoenix.MessagesTest do
   end
 
   test "has fallback module" do
-    assert Messages.Pow.Extension.Phoenix.MessagesTest.ExtensionMock.Phoenix.Messages.a(nil) == "Overridden"
+    assert Messages.Pow.Extension.Phoenix.MessagesTest.ExtensionMock.Phoenix.Messages.a(nil) ==
+             "Overridden"
   end
 end

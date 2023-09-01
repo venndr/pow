@@ -12,12 +12,13 @@ defmodule PowResetPassword.PlugTest do
 
     test "without decoded token warns" do
       assert CaptureIO.capture_io(:stderr, fn ->
-        assert {:ok, _user, _conn} =
-          %Conn{}
-          |> PowPlug.put_config(Test.pow_config())
-          |> Conn.assign(:reset_password_user, %User{id: 1})
-          |> Plug.update_user_password(@valid_params)
-      end) =~ "no `:pow_reset_password_decoded_token` key found in `conn.private`, please call `PowResetPassword.Plug.load_user_by_token/2` first"
+               assert {:ok, _user, _conn} =
+                        %Conn{}
+                        |> PowPlug.put_config(Test.pow_config())
+                        |> Conn.assign(:reset_password_user, %User{id: 1})
+                        |> Plug.update_user_password(@valid_params)
+             end) =~
+               "no `:pow_reset_password_decoded_token` key found in `conn.private`, please call `PowResetPassword.Plug.load_user_by_token/2` first"
     end
   end
 end

@@ -68,7 +68,9 @@ defmodule Pow.Extension.Base do
     rescue
       # TODO: Remove or refactor by 1.1.0
       _e in UndefinedFunctionError ->
-        IO.warn("no #{inspect extension} base module to check for #{inspect module_list} support found, please use #{inspect __MODULE__} to implement it")
+        IO.warn(
+          "no #{inspect(extension)} base module to check for #{inspect(module_list)} support found, please use #{inspect(__MODULE__)} to implement it"
+        )
 
         [extension]
         |> Kernel.++(module_list)
@@ -80,8 +82,13 @@ defmodule Pow.Extension.Base do
   defp ensure_compiled?(module), do: match?({:module, ^module}, Code.ensure_compiled(module))
 
   defp has_extension_module?(extension, ["Ecto", "Schema"]), do: extension.ecto_schema?()
-  defp has_extension_module?(extension, ["Phoenix", "ControllerCallbacks"]), do: extension.phoenix_controller_callbacks?()
-  defp has_extension_module?(extension, ["Phoenix", "Messages"]), do: extension.phoenix_messages?()
+
+  defp has_extension_module?(extension, ["Phoenix", "ControllerCallbacks"]),
+    do: extension.phoenix_controller_callbacks?()
+
+  defp has_extension_module?(extension, ["Phoenix", "Messages"]),
+    do: extension.phoenix_messages?()
+
   defp has_extension_module?(extension, ["Phoenix", "Router"]), do: extension.phoenix_router?()
 
   @doc """
@@ -95,13 +102,13 @@ defmodule Pow.Extension.Base do
   @spec use?(atom(), [any()]) :: boolean()
   def use?(extension, module_list) do
     case has?(extension, module_list) do
-      true  ->
+      true ->
         try do
           use_extension_module?(extension, module_list)
         rescue
           # TODO: Remove or refactor by 1.1.0
           _e in UndefinedFunctionError ->
-            IO.warn("#{inspect extension} has been configured improperly")
+            IO.warn("#{inspect(extension)} has been configured improperly")
 
             [extension]
             |> Kernel.++(module_list)

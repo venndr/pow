@@ -9,7 +9,9 @@ defmodule Pow.Phoenix.RegistrationControllerTest do
     test "shows", %{conn: conn} do
       conn = get(conn, ~p"/registration/new")
 
-      assert Conn.get_resp_header(conn, "cache-control") == ["no-cache, no-store, must-revalidate"]
+      assert Conn.get_resp_header(conn, "cache-control") == [
+               "no-cache, no-store, must-revalidate"
+             ]
 
       assert html = html_response(conn, 200)
       assert html =~ ~p"/registration"
@@ -205,7 +207,10 @@ defmodule Pow.Phoenix.RegistrationControllerTest do
       html_tree = DOM.parse(html)
 
       assert [input_elem] = DOM.all(html_tree, "input[name=\"user[current_password]\"]")
-      assert [error_elem] = DOM.all(html_tree, "*[phx-feedback-for=\"user[current_password]\"] > p")
+
+      assert [error_elem] =
+               DOM.all(html_tree, "*[phx-feedback-for=\"user[current_password]\"] > p")
+
       refute DOM.attribute(input_elem, "value")
       assert DOM.to_text(error_elem) =~ "can't be blank"
 

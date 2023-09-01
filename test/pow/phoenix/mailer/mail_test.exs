@@ -2,14 +2,16 @@ defmodule Pow.Phoenix.TestMail do
   @moduledoc false
   use Pow.Phoenix.Mailer.Template
 
-  template :test,
-  "Test subject",
-  """
-  <%= @value %> text
-  """,
-  """
-  <h3><%= @value %> HTML</h3>
-  """
+  template(
+    :test,
+    "Test subject",
+    """
+    <%= @value %> text
+    """,
+    """
+    <h3><%= @value %> HTML</h3>
+    """
+  )
 end
 
 defmodule Pow.Phoenix.Mailer.MailTest do
@@ -44,7 +46,12 @@ defmodule Pow.Phoenix.Mailer.MailTest do
   end
 
   test "new/4 with `:pow_mailer_layouts` setting", %{conn: conn} do
-    conn = Conn.put_private(conn, :pow_mailer_layouts, html: {Pow.Test.Phoenix.Layouts, :email}, text: {Pow.Test.Phoenix.Layouts, :email_text})
+    conn =
+      Conn.put_private(conn, :pow_mailer_layouts,
+        html: {Pow.Test.Phoenix.Layouts, :email},
+        text: {Pow.Test.Phoenix.Layouts, :email_text}
+      )
+
     assert mail = Mail.new(conn, :user, {TestMail, :test}, value: "test")
 
     assert mail.user == :user

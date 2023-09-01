@@ -18,7 +18,9 @@ defmodule Pow.Phoenix.SessionControllerTest do
     test "shows", %{conn: conn} do
       conn = get(conn, ~p"/session/new")
 
-      assert Conn.get_resp_header(conn, "cache-control") == ["no-cache, no-store, must-revalidate"]
+      assert Conn.get_resp_header(conn, "cache-control") == [
+               "no-cache, no-store, must-revalidate"
+             ]
 
       assert html = html_response(conn, 200)
       assert html =~ ~p"/session"
@@ -93,7 +95,9 @@ defmodule Pow.Phoenix.SessionControllerTest do
       conn = post(conn, ~p"/session", @invalid_params)
 
       assert html = html_response(conn, 200)
-      assert get_flash(conn, :error) == "The provided login details did not work. Please verify your credentials, and try again."
+
+      assert get_flash(conn, :error) ==
+               "The provided login details did not work. Please verify your credentials, and try again."
 
       html_tree = DOM.parse(html)
 
@@ -121,7 +125,10 @@ defmodule Pow.Phoenix.SessionControllerTest do
       conn = post(conn, ~p"/session", Map.put(@invalid_params, "request_path", "/custom-url"))
 
       assert html = html_response(conn, 200)
-      assert get_flash(conn, :error) == "The provided login details did not work. Please verify your credentials, and try again."
+
+      assert get_flash(conn, :error) ==
+               "The provided login details did not work. Please verify your credentials, and try again."
+
       assert html =~ "?request_path=%2Fcustom-url"
     end
   end

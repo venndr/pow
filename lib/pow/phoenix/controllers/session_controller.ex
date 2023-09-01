@@ -10,11 +10,11 @@ defmodule Pow.Phoenix.SessionController do
   alias Plug.Conn
   alias Pow.Plug
 
-  plug :require_not_authenticated when action in [:new, :create]
-  plug :require_authenticated when action in [:delete]
-  plug :assign_request_path when action in [:new, :create]
-  plug :assign_create_path when action in [:new, :create]
-  plug :put_no_cache_header when action in [:new]
+  plug(:require_not_authenticated when action in [:new, :create])
+  plug(:require_authenticated when action in [:delete])
+  plug(:assign_request_path when action in [:new, :create])
+  plug(:assign_create_path when action in [:new, :create])
+  plug(:put_no_cache_header when action in [:new])
 
   @doc false
   @spec process_new(Conn.t(), map()) :: {:ok, map(), Conn.t()}
@@ -43,6 +43,7 @@ defmodule Pow.Phoenix.SessionController do
     |> put_flash(:info, messages(conn).signed_in(conn))
     |> redirect(to: routes(conn).after_sign_in_path(conn))
   end
+
   def respond_create({:error, conn}) do
     conn
     |> assign(:changeset, Plug.change_user(conn, conn.params["user"]))
@@ -65,6 +66,7 @@ defmodule Pow.Phoenix.SessionController do
   defp assign_request_path(%{params: %{"request_path" => request_path}} = conn, _opts) do
     Conn.assign(conn, :request_path, request_path)
   end
+
   defp assign_request_path(conn, _opts), do: conn
 
   defp assign_create_path(conn, _opts) do
@@ -74,6 +76,7 @@ defmodule Pow.Phoenix.SessionController do
   defp create_path(%{assigns: %{request_path: request_path}} = conn) do
     create_path(conn, request_path: request_path)
   end
+
   defp create_path(conn, query_params \\ []) do
     routes(conn).path_for(conn, __MODULE__, :create, [], query_params)
   end

@@ -21,7 +21,9 @@ defmodule Mix.Tasks.Pow.Ecto.InstallTest do
   end
 
   test "generates with schema name and table", context do
-    options = @options ++ ~w(Organizations.Organization organizations --extension PowResetPassword --extension PowEmailConfirmation)
+    options =
+      @options ++
+        ~w(Organizations.Organization organizations --extension PowResetPassword --extension PowEmailConfirmation)
 
     File.cd!(context.tmp_path, fn ->
       Install.run(options)
@@ -68,7 +70,9 @@ defmodule Mix.Tasks.Pow.Ecto.InstallTest do
         end
       end
       """)
+
       File.mkdir!("ecto_dep")
+
       File.write!("ecto_dep/mix.exs", """
       defmodule EctoDep.MixProject do
         use Mix.Project
@@ -85,13 +89,16 @@ defmodule Mix.Tasks.Pow.Ecto.InstallTest do
       Mix.Project.in_project(:missing_top_level_ecto_dep, ".", fn _ ->
         # Insurance that we do test for top level ecto inclusion
         assert Enum.any?(Mix.Dep.load_on_environment([]), fn
-          %{app: :ecto_sql} -> true
-          _ -> false
-        end), "Ecto not loaded by dependency"
+                 %{app: :ecto_sql} -> true
+                 _ -> false
+               end),
+               "Ecto not loaded by dependency"
 
-        assert_raise Mix.Error, "mix pow.ecto.install can only be run inside an application directory that has :ecto or :ecto_sql as dependency", fn ->
-          Install.run([])
-        end
+        assert_raise Mix.Error,
+                     "mix pow.ecto.install can only be run inside an application directory that has :ecto or :ecto_sql as dependency",
+                     fn ->
+                       Install.run([])
+                     end
       end)
     end)
   end
@@ -99,6 +106,7 @@ defmodule Mix.Tasks.Pow.Ecto.InstallTest do
   describe "with `:namespace` environment config set" do
     setup do
       Application.put_env(:pow, :namespace, POW)
+
       on_exit(fn ->
         Application.delete_env(:pow, :namespace)
       end)

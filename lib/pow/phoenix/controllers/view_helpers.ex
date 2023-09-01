@@ -52,8 +52,8 @@ defmodule Pow.Phoenix.ViewHelpers do
   @spec layout(Conn.t()) :: Conn.t()
   def layout(conn) do
     web_module = web_module(conn)
-    view       = view(conn, web_module)
-    layout     = layout(conn, web_module)
+    view = view(conn, web_module)
+    layout = layout(conn, web_module)
 
     conn
     |> Controller.put_view(view)
@@ -100,6 +100,7 @@ defmodule Pow.Phoenix.ViewHelpers do
   """
   @spec build_view_module(module(), module() | nil) :: module()
   def build_view_module(default_view, nil), do: default_view
+
   def build_view_module(default_view, web_module) when is_atom(web_module) do
     [base, view] = split_default_view(default_view)
 
@@ -107,7 +108,8 @@ defmodule Pow.Phoenix.ViewHelpers do
   end
 
   # TODO: Remove `Pow.Phoenix.LayoutView` guard when Phoenix 1.7 is required
-  defp build_layout({layout_view, template}, web_module) when layout_view in [Pow.Phoenix.Layouts, Pow.Phoenix.LayoutView] do
+  defp build_layout({layout_view, template}, web_module)
+       when layout_view in [Pow.Phoenix.Layouts, Pow.Phoenix.LayoutView] do
     layouts = Module.concat([web_module, Layouts])
 
     if Code.ensure_loaded?(layouts) do
@@ -121,10 +123,10 @@ defmodule Pow.Phoenix.ViewHelpers do
   # Credo will complain about unless statement but we want this first
   # credo:disable-for-next-line
   unless Pow.dependency_vsn_match?(:phoenix, "< 1.7.0") do
-  defp build_layout(layout, _web_module), do: [html: layout]
+    defp build_layout(layout, _web_module), do: [html: layout]
   else
-  # TODO: Remove this when Phoenix 1.7 is required
-  defp build_layout(layout, _web_module), do: layout
+    # TODO: Remove this when Phoenix 1.7 is required
+    defp build_layout(layout, _web_module), do: layout
   end
 
   defp split_default_view(module) do

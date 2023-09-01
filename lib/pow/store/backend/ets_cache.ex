@@ -112,9 +112,10 @@ defmodule Pow.Store.Backend.EtsCache do
 
   defp table_get(key, config) do
     ets_key = ets_key(config, key)
+
     case :ets.lookup(@ets_cache_tab, ets_key) do
       [{^ets_key, value}] -> value
-      []                  -> :not_found
+      [] -> :not_found
     end
   end
 
@@ -130,10 +131,12 @@ defmodule Pow.Store.Backend.EtsCache do
   defp unwrap([_namespace | key]), do: key
 
   defp table_insert(record_or_records, config) do
-    records     = List.wrap(record_or_records)
-    ets_records = Enum.map(records, fn {key, value} ->
-      {ets_key(config, key), value}
-    end)
+    records = List.wrap(record_or_records)
+
+    ets_records =
+      Enum.map(records, fn {key, value} ->
+        {ets_key(config, key), value}
+      end)
 
     :ets.insert(@ets_cache_tab, ets_records)
 
@@ -165,7 +168,7 @@ defmodule Pow.Store.Backend.EtsCache do
 
       ttl ->
         invalidators = clear_invalidator(key, invalidators)
-        invalidator  = trigger_ttl(key, ttl, config)
+        invalidator = trigger_ttl(key, ttl, config)
 
         Map.put(invalidators, key, invalidator)
     end
@@ -177,7 +180,7 @@ defmodule Pow.Store.Backend.EtsCache do
 
   defp clear_invalidator(key, invalidators) do
     case Map.get(invalidators, key) do
-      nil         -> nil
+      nil -> nil
       invalidator -> Process.cancel_timer(invalidator)
     end
 

@@ -23,9 +23,11 @@ defmodule Pow.Phoenix.MailerTest do
   end
 
   test "deliver/2", %{conn: conn, email: email} do
-    assert_raise Pow.Config.ConfigError, "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.", fn ->
-      Mailer.deliver(conn, email)
-    end
+    assert_raise Pow.Config.ConfigError,
+                 "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.",
+                 fn ->
+                   Mailer.deliver(conn, email)
+                 end
 
     res =
       conn

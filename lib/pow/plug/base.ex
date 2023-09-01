@@ -82,9 +82,10 @@ defmodule Pow.Plug.Base do
       """
       @impl true
       def call(conn, []), do: call(conn, Plug.fetch_config(conn))
+
       def call(conn, config) do
         config = put_plug(config)
-        conn   = Plug.put_config(conn, config)
+        conn = Plug.put_config(conn, config)
 
         conn
         |> Plug.current_user(config)
@@ -105,7 +106,8 @@ defmodule Pow.Plug.Base do
       defp put_plug(config) do
         config
         |> Config.put(:plug, __MODULE__)
-        |> Config.put(:mod, __MODULE__) # TODO: Remove by 1.1.0, this is only for backwards compability
+        # TODO: Remove by 1.1.0, this is only for backwards compability
+        |> Config.put(:mod, __MODULE__)
       end
 
       @doc """
@@ -145,7 +147,8 @@ defmodule Pow.Plug.Base do
       defp maybe_fetch_user(nil, conn, config), do: do_fetch(conn, config)
       defp maybe_fetch_user(_user, conn, _config), do: conn
 
-      defp assign_current_user({conn, user}, config), do: Plug.assign_current_user(conn, user, config)
+      defp assign_current_user({conn, user}, config),
+        do: Plug.assign_current_user(conn, user, config)
 
       defp remove_current_user(conn, config), do: Plug.assign_current_user(conn, nil, config)
 
@@ -160,7 +163,7 @@ defmodule Pow.Plug.Base do
     |> Kernel.||(fallback_store(config))
     |> case do
       {store, store_config} -> {store, store_opts(config, store_config)}
-      nil                   -> {CredentialsCache, store_opts(config)}
+      nil -> {CredentialsCache, store_opts(config)}
     end
   end
 
@@ -171,7 +174,10 @@ defmodule Pow.Plug.Base do
         nil
 
       value ->
-        IO.warn("use of `:session_store` config value is deprecated, use `:credentials_cache_store` instead")
+        IO.warn(
+          "use of `:session_store` config value is deprecated, use `:credentials_cache_store` instead"
+        )
+
         value
     end
   end

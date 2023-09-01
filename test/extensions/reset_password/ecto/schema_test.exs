@@ -9,13 +9,14 @@ defmodule PowResetPassword.Ecto.SchemaTest do
     @moduledoc false
     use Ecto.Schema
     use Pow.Ecto.Schema
+
     use Pow.Extension.Ecto.Schema,
       extensions: [PowResetPassword]
 
     @ecto_derive_inspect_for_redacted_fields false
 
     schema "users" do
-      field :password_reset_at, :utc_datetime
+      field(:password_reset_at, :utc_datetime)
 
       pow_user_fields()
 
@@ -40,7 +41,8 @@ defmodule PowResetPassword.Ecto.SchemaTest do
     end
 
     test "with overridden changeset" do
-      changeset = OverridenChangesetUser.reset_password_changeset(%OverridenChangesetUser{}, @valid_params)
+      changeset =
+        OverridenChangesetUser.reset_password_changeset(%OverridenChangesetUser{}, @valid_params)
 
       assert changeset.valid?
       assert changeset.changes.password_reset_at

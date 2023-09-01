@@ -44,7 +44,10 @@ defmodule Pow.Extension.Ecto.Schema do
     quote do
       @pow_extension_config Config.merge(@pow_config, unquote(config))
 
-      Module.eval_quoted(__MODULE__, unquote(__MODULE__).__use_extensions__(@pow_extension_config))
+      Module.eval_quoted(
+        __MODULE__,
+        unquote(__MODULE__).__use_extensions__(@pow_extension_config)
+      )
 
       unquote(__MODULE__).__register_extension_fields__()
       unquote(__MODULE__).__register_extension_assocs__()
@@ -67,7 +70,8 @@ defmodule Pow.Extension.Ecto.Schema do
   @doc false
   defmacro __register_extension_fields__ do
     quote do
-      for {name, value, options, _migration_options} <- unquote(__MODULE__).attrs(@pow_extension_config) do
+      for {name, value, options, _migration_options} <-
+            unquote(__MODULE__).attrs(@pow_extension_config) do
         Module.put_attribute(__MODULE__, :pow_fields, {name, value, options})
       end
     end
@@ -79,8 +83,11 @@ defmodule Pow.Extension.Ecto.Schema do
       @pow_extension_config
       |> unquote(__MODULE__).assocs()
       |> Enum.map(fn
-        {type, name, :users, field_options, _migration_options} -> {type, name, __MODULE__, field_options}
-        {type, name, module, field_options, _migration_options} -> {type, name, module, field_options}
+        {type, name, :users, field_options, _migration_options} ->
+          {type, name, __MODULE__, field_options}
+
+        {type, name, module, field_options, _migration_options} ->
+          {type, name, module, field_options}
       end)
       |> Enum.each(&Module.put_attribute(__MODULE__, :pow_assocs, &1))
     end
@@ -127,7 +134,9 @@ defmodule Pow.Extension.Ecto.Schema do
 
   defp normalize_attr({name, value}), do: {name, value, [], []}
   defp normalize_attr({name, value, field_options}), do: {name, value, field_options, []}
-  defp normalize_attr({name, value, field_options, migration_options}), do: {name, value, field_options, migration_options}
+
+  defp normalize_attr({name, value, field_options, migration_options}),
+    do: {name, value, field_options, migration_options}
 
   @doc """
   Merge all extension associations together to one list.
@@ -149,8 +158,12 @@ defmodule Pow.Extension.Ecto.Schema do
   end
 
   defp normalize_assoc({type, name, module}), do: {type, name, module, [], []}
-  defp normalize_assoc({type, name, module, field_options}), do: {type, name, module, field_options, []}
-  defp normalize_assoc({type, name, module, field_options, migration_options}), do: {type, name, module, field_options, migration_options}
+
+  defp normalize_assoc({type, name, module, field_options}),
+    do: {type, name, module, field_options, []}
+
+  defp normalize_assoc({type, name, module, field_options, migration_options}),
+    do: {type, name, module, field_options, migration_options}
 
   @doc """
   Merge all extension indexes together to one list.
@@ -227,13 +240,15 @@ defmodule Pow.Extension.Ecto.Schema do
     fields
     |> Enum.member?(field)
     |> case do
-      true  -> :ok
+      true -> :ok
       false -> raise_missing_field_error!(module, field, extension)
     end
   end
 
   @spec raise_missing_field_error!(module(), atom(), atom()) :: no_return()
   defp raise_missing_field_error!(module, field, extension) do
-    raise SchemaError, message: "A `#{inspect field}` schema field should be defined in #{inspect module} to use #{inspect extension}"
+    raise SchemaError,
+      message:
+        "A `#{inspect(field)}` schema field should be defined in #{inspect(module)} to use #{inspect(extension)}"
   end
 end

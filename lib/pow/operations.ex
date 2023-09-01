@@ -16,7 +16,7 @@ defmodule Pow.Operations do
   @spec changeset(map(), Config.t()) :: map() | nil
   def changeset(params, config) do
     user_mod = Config.user!(config)
-    user     = user_mod.__struct__()
+    user = user_mod.__struct__()
 
     changeset(user, params, config)
   end
@@ -41,7 +41,7 @@ defmodule Pow.Operations do
   def authenticate(params, config) do
     case context_module(config) do
       Context -> Context.authenticate(params, config)
-      module  -> module.authenticate(params)
+      module -> module.authenticate(params)
     end
   end
 
@@ -55,7 +55,7 @@ defmodule Pow.Operations do
   def create(params, config) do
     case context_module(config) do
       Context -> Context.create(params, config)
-      module  -> module.create(params)
+      module -> module.create(params)
     end
   end
 
@@ -69,7 +69,7 @@ defmodule Pow.Operations do
   def update(user, params, config) do
     case context_module(config) do
       Context -> Context.update(user, params, config)
-      module  -> module.update(user, params)
+      module -> module.update(user, params)
     end
   end
 
@@ -83,7 +83,7 @@ defmodule Pow.Operations do
   def delete(user, config) do
     case context_module(config) do
       Context -> Context.delete(user, config)
-      module  -> module.delete(user)
+      module -> module.delete(user)
     end
   end
 
@@ -97,7 +97,7 @@ defmodule Pow.Operations do
   def get_by(clauses, config) do
     case context_module(config) do
       Context -> Context.get_by(clauses, config)
-      module  -> module.get_by(clauses)
+      module -> module.get_by(clauses)
     end
   end
 
@@ -116,7 +116,7 @@ defmodule Pow.Operations do
   def fetch_primary_key_values(%mod{} = struct, _config) do
     cond do
       not Code.ensure_loaded?(mod) ->
-        {:error, "The module #{inspect mod} does not exist"}
+        {:error, "The module #{inspect(mod)} does not exist"}
 
       function_exported?(mod, :__schema__, 1) ->
         :primary_key
@@ -128,13 +128,19 @@ defmodule Pow.Operations do
     end
   end
 
-  defp map_primary_key_values([], %mod{}, []), do: {:error, "No primary keys found for #{inspect mod}"}
+  defp map_primary_key_values([], %mod{}, []),
+    do: {:error, "No primary keys found for #{inspect(mod)}"}
+
   defp map_primary_key_values([key | rest], %mod{} = struct, acc) do
     case Map.get(struct, key) do
-      nil   -> {:error, "Primary key value for key `#{inspect key}` in #{inspect mod} can't be `nil`"}
-      value -> map_primary_key_values(rest, struct, acc ++ [{key, value}])
+      nil ->
+        {:error, "Primary key value for key `#{inspect(key)}` in #{inspect(mod)} can't be `nil`"}
+
+      value ->
+        map_primary_key_values(rest, struct, acc ++ [{key, value}])
     end
   end
+
   defp map_primary_key_values([], _struct, acc), do: {:ok, acc}
 
   @doc """
@@ -148,7 +154,7 @@ defmodule Pow.Operations do
   def reload(struct, config) do
     case fetch_primary_key_values(struct, config) do
       {:error, error} -> raise error
-      {:ok, clauses}  -> get_by(clauses, config)
+      {:ok, clauses} -> get_by(clauses, config)
     end
   end
 end

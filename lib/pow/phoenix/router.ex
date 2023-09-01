@@ -97,7 +97,8 @@ defmodule Pow.Phoenix.Router do
   @doc false
   defmacro __using__(_opts \\ []) do
     quote do
-      import unquote(__MODULE__), only: [pow_routes: 0, pow_scope: 1, pow_session_routes: 0, pow_registration_routes: 0]
+      import unquote(__MODULE__),
+        only: [pow_routes: 0, pow_scope: 1, pow_session_routes: 0, pow_registration_routes: 0]
     end
   end
 
@@ -135,7 +136,10 @@ defmodule Pow.Phoenix.Router do
   defmacro pow_session_routes do
     quote location: :keep do
       pow_scope do
-        unquote(__MODULE__).pow_resources "/session", SessionController, singleton: true, only: [:new, :create, :delete]
+        unquote(__MODULE__).pow_resources("/session", SessionController,
+          singleton: true,
+          only: [:new, :create, :delete]
+        )
       end
     end
   end
@@ -144,7 +148,10 @@ defmodule Pow.Phoenix.Router do
   defmacro pow_registration_routes do
     quote location: :keep do
       pow_scope do
-        unquote(__MODULE__).pow_resources "/registration", RegistrationController, singleton: true, only: [:new, :create, :edit, :update, :delete]
+        unquote(__MODULE__).pow_resources("/registration", RegistrationController,
+          singleton: true,
+          only: [:new, :create, :edit, :update, :delete]
+        )
       end
     end
   end
@@ -154,35 +161,52 @@ defmodule Pow.Phoenix.Router do
     quote location: :keep do
       phoenix_routes = Module.get_attribute(__ENV__.module, :phoenix_routes)
       phoenix_forwards = Module.get_attribute(__ENV__.module, :phoenix_forwards)
-      opts = unquote(__MODULE__).__filter_resource_actions__({phoenix_routes, phoenix_forwards}, __ENV__.line, __ENV__.module, unquote(path), unquote(controller), unquote(opts))
 
-      resources unquote(path), unquote(controller), opts
+      opts =
+        unquote(__MODULE__).__filter_resource_actions__(
+          {phoenix_routes, phoenix_forwards},
+          __ENV__.line,
+          __ENV__.module,
+          unquote(path),
+          unquote(controller),
+          unquote(opts)
+        )
+
+      resources(unquote(path), unquote(controller), opts)
     end
   end
 
   @doc false
-  def __filter_resource_actions__({phoenix_routes, phoenix_forwards}, line, module, path, controller, options) do
-    resource    = Phoenix.Router.Resource.build(path, controller, options)
-    param       = resource.param
+  def __filter_resource_actions__(
+        {phoenix_routes, phoenix_forwards},
+        line,
+        module,
+        path,
+        controller,
+        options
+      ) do
+    resource = Phoenix.Router.Resource.build(path, controller, options)
+    param = resource.param
+
     action_opts =
       if resource.singleton do
         [
-          show:   {:get, path},
-          new:    {:get, path <> "/new"},
-          edit:   {:get, path <> "/edit"},
+          show: {:get, path},
+          new: {:get, path <> "/new"},
+          edit: {:get, path <> "/edit"},
           create: {:post, path},
           delete: {:delete, path},
           update: {:patch, path}
         ]
       else
         [
-          index:   {:get, path},
-          show:    {:get, path <> "/:" <> param},
-          new:     {:get, path <> "/new"},
-          edit:    {:get, path <> "/:" <> param <> "/edit"},
-          create:  {:post, path},
-          delete:  {:delete, path <> "/:" <> param},
-          update:  {:patch, path <> "/:" <> param}
+          index: {:get, path},
+          show: {:get, path <> "/:" <> param},
+          new: {:get, path <> "/new"},
+          edit: {:get, path <> "/:" <> param <> "/edit"},
+          create: {:post, path},
+          delete: {:delete, path <> "/:" <> param},
+          update: {:patch, path <> "/:" <> param}
         ]
       end
 
@@ -190,14 +214,32 @@ defmodule Pow.Phoenix.Router do
       Enum.reject(resource.actions, fn plug_opts ->
         {verb, path} = Keyword.fetch!(action_opts, plug_opts)
 
-        __route_defined__({phoenix_routes, phoenix_forwards}, line, module, verb, path, controller, plug_opts, options)
+        __route_defined__(
+          {phoenix_routes, phoenix_forwards},
+          line,
+          module,
+          verb,
+          path,
+          controller,
+          plug_opts,
+          options
+        )
       end)
 
     Keyword.put(options, :only, only)
   end
 
   @doc false
-  def __route_defined__({phoenix_routes, phoenix_forwards}, line, module, verb, path, plug, plug_opts, options) do
+  def __route_defined__(
+        {phoenix_routes, phoenix_forwards},
+        line,
+        module,
+        verb,
+        path,
+        plug,
+        plug_opts,
+        options
+      ) do
     line
     |> Phoenix.Router.Scope.route(module, :match, verb, path, plug, plug_opts, options)
     |> case do
@@ -214,10 +256,13 @@ defmodule Pow.Phoenix.Router do
   end
 
   defp any_matching_routes?(phoenix_routes, phoenix_forwards, route, keys) do
-    needle       = Map.take(route, keys)
-    route_exprs  = exprs(route, phoenix_forwards)
+    needle = Map.take(route, keys)
+    route_exprs = exprs(route, phoenix_forwards)
 
-    Enum.any?(phoenix_routes, &Map.take(&1, keys) == needle && equal_binding_length?(&1, route_exprs, phoenix_forwards))
+    Enum.any?(
+      phoenix_routes,
+      &(Map.take(&1, keys) == needle && equal_binding_length?(&1, route_exprs, phoenix_forwards))
+    )
   end
 
   defp equal_binding_length?(route, exprs, forwards) do
@@ -225,7 +270,8 @@ defmodule Pow.Phoenix.Router do
   end
 
   # TODO: Remove when Phoenix 1.7 is required
-  if Code.ensure_loaded?(Phoenix.Router.Route) and function_exported?(Phoenix.Router.Route, :exprs, 1) do
+  if Code.ensure_loaded?(Phoenix.Router.Route) and
+       function_exported?(Phoenix.Router.Route, :exprs, 1) do
     def exprs(route, _forwards), do: Phoenix.Router.Route.exprs(route)
   else
     defdelegate exprs(route, forwards), to: Phoenix.Router.Route
@@ -236,7 +282,16 @@ defmodule Pow.Phoenix.Router do
       phoenix_routes = Module.get_attribute(__ENV__.module, :phoenix_routes)
       phoenix_forwards = Module.get_attribute(__ENV__.module, :phoenix_forwards)
 
-      unless unquote(__MODULE__).__route_defined__({phoenix_routes, phoenix_forwards}, __ENV__.line, __ENV__.module, unquote(verb), unquote(path), unquote(plug), unquote(plug_opts), unquote(options)) do
+      unless unquote(__MODULE__).__route_defined__(
+               {phoenix_routes, phoenix_forwards},
+               __ENV__.line,
+               __ENV__.module,
+               unquote(verb),
+               unquote(path),
+               unquote(plug),
+               unquote(plug_opts),
+               unquote(options)
+             ) do
         unquote(verb)(unquote(path), unquote(plug), unquote(plug_opts), unquote(options))
       end
     end
@@ -250,15 +305,18 @@ defmodule Pow.Phoenix.Router do
     |> List.wrap()
     |> validate_scope!()
   end
-  def validate_scope!([]), do: :ok # After Phoenix 1.4.4 this no longer happens since scope now always initializes with an empty Scopes map
+
+  # After Phoenix 1.4.4 this no longer happens since scope now always initializes with an empty Scopes map
+  def validate_scope!([]), do: :ok
+
   def validate_scope!(stack) when is_list(stack) do
     modules =
       stack
       |> Enum.map(& &1.alias)
       |> Enum.reject(fn
         nil -> true
-        []  -> true
-        _   -> false
+        [] -> true
+        _ -> false
       end)
       |> List.flatten()
 
@@ -268,23 +326,23 @@ defmodule Pow.Phoenix.Router do
 
       modules ->
         raise ArgumentError,
-          """
-          Pow routes should not be defined inside scopes with aliases: #{inspect Module.concat(modules)}
+              """
+              Pow routes should not be defined inside scopes with aliases: #{inspect(Module.concat(modules))}
 
-          Please consider separating your scopes:
+              Please consider separating your scopes:
 
-            scope "/" do
-              pipe_through :browser
+                scope "/" do
+                  pipe_through :browser
 
-              pow_routes()
-            end
+                  pow_routes()
+                end
 
-            scope "/", #{inspect Module.concat(modules)} do
-              pipe_through :browser
+                scope "/", #{inspect(Module.concat(modules))} do
+                  pipe_through :browser
 
-              get "/", PageController, :index
-            end
-          """
+                  get "/", PageController, :index
+                end
+              """
     end
   end
 

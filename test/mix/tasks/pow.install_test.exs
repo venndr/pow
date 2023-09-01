@@ -35,9 +35,11 @@ defmodule Mix.Tasks.Pow.InstallTest do
       """)
 
       Mix.Project.in_project(:umbrella, ".", fn _ ->
-        assert_raise Mix.Error, ~r/mix pow.install has to be used inside an application directory/, fn ->
-          Install.run([])
-        end
+        assert_raise Mix.Error,
+                     ~r/mix pow.install has to be used inside an application directory/,
+                     fn ->
+                       Install.run([])
+                     end
       end)
     end)
   end
@@ -48,17 +50,23 @@ defmodule Mix.Tasks.Pow.InstallTest do
         Install.run(~w(Users.User))
       end
 
-      assert_raise Mix.Error, ~r/Expected the schema argument, "users.user", to be a valid module name/, fn ->
-        Install.run(~w(users.user users))
-      end
+      assert_raise Mix.Error,
+                   ~r/Expected the schema argument, "users.user", to be a valid module name/,
+                   fn ->
+                     Install.run(~w(users.user users))
+                   end
 
-      assert_raise Mix.Error, ~r/Expected the plural argument, "Users", to be all lowercase using snake_case convention/, fn ->
-        Install.run(~w(Users.User Users))
-      end
+      assert_raise Mix.Error,
+                   ~r/Expected the plural argument, "Users", to be all lowercase using snake_case convention/,
+                   fn ->
+                     Install.run(~w(Users.User Users))
+                   end
 
-      assert_raise Mix.Error, ~r/Expected the plural argument, "users:", to be all lowercase using snake_case convention/, fn ->
-        Install.run(~w(Users.User users:))
-      end
+      assert_raise Mix.Error,
+                   ~r/Expected the plural argument, "users:", to be all lowercase using snake_case convention/,
+                   fn ->
+                     Install.run(~w(Users.User users:))
+                   end
     end)
   end
 end

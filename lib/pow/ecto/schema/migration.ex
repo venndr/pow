@@ -48,12 +48,14 @@ defmodule Pow.Ecto.Schema.Migration do
   """
   @spec new(atom(), binary(), Config.t()) :: map()
   def new(context_base, schema_plural, config \\ []) do
-    repo           = Config.get(config, :repo, Module.concat([context_base, "Repo"]))
-    attrs          = Config.get(config, :attrs, Fields.attrs(config))
-    indexes        = Config.get(config, :indexes, Fields.indexes(config))
+    repo = Config.get(config, :repo, Module.concat([context_base, "Repo"]))
+    attrs = Config.get(config, :attrs, Fields.attrs(config))
+    indexes = Config.get(config, :indexes, Fields.indexes(config))
     migration_name = name(schema_plural)
 
-    schema(context_base, repo, schema_plural, migration_name, attrs, indexes, binary_id: config[:binary_id])
+    schema(context_base, repo, schema_plural, migration_name, attrs, indexes,
+      binary_id: config[:binary_id]
+    )
   end
 
   defp name(schema_plural), do: "Create#{Macro.camelize(schema_plural)}"
@@ -63,11 +65,11 @@ defmodule Pow.Ecto.Schema.Migration do
   """
   @spec schema(atom(), atom(), binary(), binary(), list(), list(), Keyword.t()) :: map()
   def schema(context_base, repo, table, migration_name, attrs, indexes, opts) do
-    migration_attrs    = migration_attrs(attrs)
-    binary_id          = opts[:binary_id]
+    migration_attrs = migration_attrs(attrs)
+    binary_id = opts[:binary_id]
     migration_defaults = defaults(migration_attrs)
-    {assocs, attrs}    = partition_attrs(context_base, migration_attrs)
-    indexes            = migration_indexes(indexes, table)
+    {assocs, attrs} = partition_attrs(context_base, migration_attrs)
+    indexes = migration_indexes(indexes, table)
 
     %{
       migration_name: migration_name,
@@ -91,15 +93,17 @@ defmodule Pow.Ecto.Schema.Migration do
   end
 
   defp validate!({_name, _type, _field_options, _migration_options}), do: :ok
+
   defp validate!(value) do
     raise """
     The attribute is required to have the format `{name, type, field_options, migration_options}`.
 
-    The attribute provided was: #{inspect value}
+    The attribute provided was: #{inspect(value)}
     """
   end
 
-  defp is_virtual?({_name, _type, field_options, _migration_options}), do: Keyword.get(field_options, :virtual, false)
+  defp is_virtual?({_name, _type, field_options, _migration_options}),
+    do: Keyword.get(field_options, :virtual, false)
 
   defp normalize_migration_options({name, type, field_options, migration_options}) do
     options =
@@ -107,14 +111,15 @@ defmodule Pow.Ecto.Schema.Migration do
       |> Keyword.take([:default])
       |> Keyword.merge(migration_options)
 
-      {name, type, options}
+    {name, type, options}
   end
 
   defp to_migration_attr({name, type, []}) do
     {name, type, ""}
   end
+
   defp to_migration_attr({name, type, defaults}) do
-    defaults = Enum.map_join(defaults, ", ", fn {k, v} -> "#{k}: #{inspect v}" end)
+    defaults = Enum.map_join(defaults, ", ", fn {k, v} -> "#{k}: #{inspect(v)}" end)
 
     {name, type, ", #{defaults}"}
   end
@@ -132,7 +137,8 @@ defmodule Pow.Ecto.Schema.Migration do
         _ -> false
       end)
 
-    attrs  = Enum.map(attrs, fn {key_id, type, _defaults} -> {key_id, type} end)
+    attrs = Enum.map(attrs, fn {key_id, type, _defaults} -> {key_id, type} end)
+
     assocs =
       Enum.map(assocs, fn {key_id, {:references, source}, _} ->
         key = String.replace(Atom.to_string(key_id), "_id", "")

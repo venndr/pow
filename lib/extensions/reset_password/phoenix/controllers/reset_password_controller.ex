@@ -6,10 +6,10 @@ defmodule PowResetPassword.Phoenix.ResetPasswordController do
   alias Pow.Plug, as: PowPlug
   alias PowResetPassword.{Phoenix.Mailer, Plug}
 
-  plug :require_not_authenticated
-  plug :load_user_from_reset_token when action in [:edit, :update]
-  plug :assign_create_path when action in [:new, :create]
-  plug :assign_update_path when action in [:edit, :update]
+  plug(:require_not_authenticated)
+  plug(:load_user_from_reset_token when action in [:edit, :update])
+  plug(:assign_create_path when action in [:new, :create])
+  plug(:assign_update_path when action in [:edit, :update])
 
   @spec process_new(Conn.t(), map()) :: {:ok, map(), Conn.t()}
   def process_new(conn, _params) do
@@ -37,6 +37,7 @@ defmodule PowResetPassword.Phoenix.ResetPasswordController do
     |> put_flash(:info, extension_messages(conn).email_has_been_sent(conn))
     |> redirect(to: routes(conn).session_path(conn, :new))
   end
+
   def respond_create({:error, changeset, conn}) do
     case PowPlug.__prevent_user_enumeration__(conn, nil) do
       true ->
@@ -75,6 +76,7 @@ defmodule PowResetPassword.Phoenix.ResetPasswordController do
     |> put_flash(:info, extension_messages(conn).password_has_been_reset(conn))
     |> redirect(to: routes(conn).session_path(conn, :new))
   end
+
   def respond_update({:error, changeset, conn}) do
     conn
     |> assign(:changeset, changeset)
@@ -107,7 +109,7 @@ defmodule PowResetPassword.Phoenix.ResetPasswordController do
 
   defp assign_update_path(conn, _opts) do
     token = conn.params["id"]
-    path  = routes(conn).path_for(conn, __MODULE__, :update, [token])
+    path = routes(conn).path_for(conn, __MODULE__, :update, [token])
     Conn.assign(conn, :action, path)
   end
 end

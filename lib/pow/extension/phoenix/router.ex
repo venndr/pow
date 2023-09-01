@@ -81,21 +81,25 @@ defmodule Pow.Extension.Phoenix.Router do
   defp create_routers_module(module, config) do
     router = router_module(module)
 
-    Module.create(router, quote do
-      @config unquote(config)
-      @routers unquote(__MODULE__).__router_modules__(@config)
+    Module.create(
+      router,
+      quote do
+        @config unquote(config)
+        @routers unquote(__MODULE__).__router_modules__(@config)
 
-      def routes do
-        for router <- @routers do
-          quote do
-            Router.validate_scope!(__MODULE__)
+        def routes do
+          for router <- @routers do
+            quote do
+              Router.validate_scope!(__MODULE__)
 
-            require unquote(router)
-            unquote(router).scoped_routes(@config)
+              require unquote(router)
+              unquote(router).scoped_routes(@config)
+            end
           end
         end
-      end
-    end, __ENV__)
+      end,
+      __ENV__
+    )
   end
 
   defp router_module(module) do

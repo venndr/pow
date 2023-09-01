@@ -98,8 +98,11 @@ defmodule Pow.Phoenix.Routes do
   """
   def user_not_authenticated_path(conn, routes_module \\ __MODULE__) do
     case conn.method do
-      "GET"   -> routes_module.session_path(conn, :new, request_path: Phoenix.Controller.current_path(conn))
-      _method -> routes_module.session_path(conn, :new)
+      "GET" ->
+        routes_module.session_path(conn, :new, request_path: Phoenix.Controller.current_path(conn))
+
+      _method ->
+        routes_module.session_path(conn, :new)
     end
   end
 
@@ -108,12 +111,14 @@ defmodule Pow.Phoenix.Routes do
 
   By default this is the same as `after_sign_in_path/1`.
   """
-  def user_already_authenticated_path(conn, routes_module \\ __MODULE__), do: routes_module.after_sign_in_path(conn)
+  def user_already_authenticated_path(conn, routes_module \\ __MODULE__),
+    do: routes_module.after_sign_in_path(conn)
 
   @doc """
   Path to redirect user to when user has signed out.
   """
-  def after_sign_out_path(conn, routes_module \\ __MODULE__), do: routes_module.session_path(conn, :new)
+  def after_sign_out_path(conn, routes_module \\ __MODULE__),
+    do: routes_module.session_path(conn, :new)
 
   @doc """
   Path to redirect user to when user has signed in.
@@ -122,8 +127,10 @@ defmodule Pow.Phoenix.Routes do
   if it exists.
   """
   def after_sign_in_path(params, routes_module \\ __MODULE__)
-  def after_sign_in_path(%{assigns: %{request_path: request_path}}, _routes_module) when is_binary(request_path),
-    do: request_path
+
+  def after_sign_in_path(%{assigns: %{request_path: request_path}}, _routes_module)
+      when is_binary(request_path),
+      do: request_path
 
   def after_sign_in_path(_params, _routes_module), do: "/"
 
@@ -132,25 +139,30 @@ defmodule Pow.Phoenix.Routes do
 
   By default this is the same as `after_sign_in_path/1`.
   """
-  def after_registration_path(conn, routes_module \\ __MODULE__), do: routes_module.after_sign_in_path(conn)
+  def after_registration_path(conn, routes_module \\ __MODULE__),
+    do: routes_module.after_sign_in_path(conn)
 
   @doc """
   Path to redirect user to when user has updated their account.
   """
-  def after_user_updated_path(conn, routes_module \\ __MODULE__), do: routes_module.registration_path(conn, :edit)
+  def after_user_updated_path(conn, routes_module \\ __MODULE__),
+    do: routes_module.registration_path(conn, :edit)
 
   @doc """
   Path to redirect user to when user has deleted their account.
 
   By default this is the same as `after_sign_out_path/1`.
   """
-  def after_user_deleted_path(conn, routes_module \\ __MODULE__), do: routes_module.after_sign_out_path(conn)
+  def after_user_deleted_path(conn, routes_module \\ __MODULE__),
+    do: routes_module.after_sign_out_path(conn)
 
   @doc false
-  def session_path(conn, verb, query_params \\ [], routes_module \\ __MODULE__), do: routes_module.path_for(conn, SessionController, verb, [], query_params)
+  def session_path(conn, verb, query_params \\ [], routes_module \\ __MODULE__),
+    do: routes_module.path_for(conn, SessionController, verb, [], query_params)
 
   @doc false
-  def registration_path(conn, verb, routes_module \\ __MODULE__), do: routes_module.path_for(conn, RegistrationController, verb)
+  def registration_path(conn, verb, routes_module \\ __MODULE__),
+    do: routes_module.path_for(conn, RegistrationController, verb)
 
   @doc """
   Generates a path route.
@@ -174,20 +186,21 @@ defmodule Pow.Phoenix.Routes do
       path = gen_route(:path, conn, plug, plug_opts, vars, query_params)
       Phoenix.VerifiedRoutes.unverified_url(conn, path)
     end
+
     defp gen_route(:path, conn, plug, plug_opts, vars, query_params) do
       router = conn.private.phoenix_router
 
       %{path: "/" <> path} =
         Enum.find(router.__routes__(), fn route ->
           route.plug == plug and route.plug_opts == plug_opts
-        end) || raise "Route not found for #{inspect plug}.#{plug_opts}/2 in #{inspect router}"
+        end) || raise "Route not found for #{inspect(plug)}.#{plug_opts}/2 in #{inspect(router)}"
 
       {segments, _index} =
         path
         |> String.split("/")
         |> Enum.reduce({[], 0}, fn
           ":" <> _var, {segments, index} ->
-            segment = to_param(Enum.at(vars, index) || raise "Missing argument")
+            segment = to_param(Enum.at(vars, index) || raise("Missing argument"))
 
             {segments ++ [segment], index + 1}
 
@@ -195,7 +208,11 @@ defmodule Pow.Phoenix.Routes do
             {segments ++ [segment], index}
         end)
 
-      path = "/" <> Enum.map_join(segments, "/", fn segment -> URI.encode(segment, &URI.char_unreserved?/1) end)
+      path =
+        "/" <>
+          Enum.map_join(segments, "/", fn segment ->
+            URI.encode(segment, &URI.char_unreserved?/1)
+          end)
 
       Phoenix.VerifiedRoutes.unverified_path(conn, router, path, query_params)
     end
@@ -207,10 +224,10 @@ defmodule Pow.Phoenix.Routes do
     defp to_param(data), do: Phoenix.Param.to_param(data)
   else
     defp gen_route(type, conn, plug, verb, vars, query_params) do
-      alias  = Pow.Phoenix.Controller.route_helper(plug)
+      alias = Pow.Phoenix.Controller.route_helper(plug)
       helper = :"#{alias}_#{type}"
       router = Module.concat([conn.private.phoenix_router, Helpers])
-      args   = [conn, verb] ++ vars ++ [query_params]
+      args = [conn, verb] ++ vars ++ [query_params]
 
       apply(router, helper, args)
     end

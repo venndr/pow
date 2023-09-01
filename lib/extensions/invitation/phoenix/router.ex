@@ -6,7 +6,9 @@ defmodule PowInvitation.Phoenix.Router do
 
   defmacro routes(_config) do
     quote location: :keep do
-      Router.pow_resources "/invitations", InvitationController, only: [:new, :create, :show, :edit, :update]
+      Router.pow_resources("/invitations", InvitationController,
+        only: [:new, :create, :show, :edit, :update]
+      )
     end
   end
 end

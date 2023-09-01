@@ -22,8 +22,8 @@ defmodule Pow.Test.Phoenix.OverriddenRouteRouter do
   use Pow.Phoenix.Router
 
   scope "/", Pow.Phoenix, as: "pow" do
-    get "/registration/overridden", RegistrationController, :new
-    resources "/registration/overridden", RegistrationController, only: [:edit], singleton: true
+    get("/registration/overridden", RegistrationController, :new)
+    resources("/registration/overridden", RegistrationController, only: [:edit], singleton: true)
   end
 
   scope "/:extra" do
@@ -44,7 +44,9 @@ defmodule Pow.Phoenix.RouterTest do
   alias Pow.Test.Phoenix.OverriddenRouteRouter
 
   test "validates no aliases" do
-    assert unquote(module_raised_with) =~ "Pow routes should not be defined inside scopes with aliases: Test"
+    assert unquote(module_raised_with) =~
+             "Pow routes should not be defined inside scopes with aliases: Test"
+
     assert unquote(module_raised_with) =~ "scope \"/\", Test do"
   end
 
@@ -59,6 +61,9 @@ defmodule Pow.Phoenix.RouterTest do
   end
 
   defp filter_routes(plug, opts) do
-    Enum.filter(OverriddenRouteRouter.phoenix_routes(), & &1.plug == plug && &1.plug_opts == opts)
+    Enum.filter(
+      OverriddenRouteRouter.phoenix_routes(),
+      &(&1.plug == plug && &1.plug_opts == opts)
+    )
   end
 end

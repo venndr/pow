@@ -35,17 +35,21 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.MigrationsTest do
 
   use Pow.Test.Mix.TestCase
 
-  @extension       ExtensionMock
-  @extension_name  "MixTasksPowExtensionEctoGenMigrationsTestExtensionMock"
+  @extension ExtensionMock
+  @extension_name "MixTasksPowExtensionEctoGenMigrationsTestExtensionMock"
   @migrations_path "migrations"
-  @options         ["-r", inspect(Repo), "--extension", @extension]
+  @options ["-r", inspect(Repo), "--extension", @extension]
 
   test "generates migrations", context do
     File.cd!(context.tmp_path, fn ->
       Migrations.run(@options)
 
       assert [migration_file] = File.ls!(@migrations_path)
-      assert String.match?(migration_file, ~r/^\d{14}_add_#{Macro.underscore(@extension_name)}_to_users\.exs$/)
+
+      assert String.match?(
+               migration_file,
+               ~r/^\d{14}_add_#{Macro.underscore(@extension_name)}_to_users\.exs$/
+             )
 
       file = @migrations_path |> Path.join(migration_file) |> File.read!()
 
@@ -61,7 +65,10 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.MigrationsTest do
     File.cd!(context.tmp_path, fn ->
       Migrations.run(["-r", inspect(Repo)])
 
-      assert_received {:mix_shell, :error, ["No extensions was provided as arguments, or found in `config :pow, :pow` configuration."]}
+      assert_received {:mix_shell, :error,
+                       [
+                         "No extensions was provided as arguments, or found in `config :pow, :pow` configuration."
+                       ]}
     end)
   end
 
@@ -69,7 +76,10 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.MigrationsTest do
     File.cd!(context.tmp_path, fn ->
       Migrations.run(["-r", inspect(Repo), "--extension", "PowResetPassword"])
 
-      assert_received {:mix_shell, :info, ["Notice: No migration file will be generated for PowResetPassword as this extension doesn't require any migrations."]}
+      assert_received {:mix_shell, :info,
+                       [
+                         "Notice: No migration file will be generated for PowResetPassword as this extension doesn't require any migrations."
+                       ]}
     end)
   end
 
@@ -91,6 +101,7 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.MigrationsTest do
   describe "with `:otp_app` configuration" do
     setup do
       Application.put_env(:pow, :pow, extensions: [@extension])
+
       on_exit(fn ->
         Application.delete_env(:pow, :pow)
       end)
@@ -110,14 +121,17 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.MigrationsTest do
     options = @options ++ ["--extension", @extension]
 
     File.cd!(context.tmp_path, fn ->
-      assert_raise Mix.Error, "migration can't be created, there is already a migration file with name Add#{@extension_name}ToUsers.", fn ->
-        Migrations.run(options)
-      end
+      assert_raise Mix.Error,
+                   "migration can't be created, there is already a migration file with name Add#{@extension_name}ToUsers.",
+                   fn ->
+                     Migrations.run(options)
+                   end
     end)
   end
 
   test "generates with `:generators` config", context do
     Application.put_env(:pow, :generators, binary_id: true)
+
     on_exit(fn ->
       Application.delete_env(:pow, :generators)
     end)

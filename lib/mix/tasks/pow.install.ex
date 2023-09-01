@@ -30,6 +30,7 @@ defmodule Mix.Tasks.Pow.Install do
   defp schema_opts({_config, parsed, _invalid}) do
     Pow.validate_schema_args!(parsed, @mix_task)
   end
+
   defp schema_opts(args) when is_list(args) do
     args
     |> Pow.parse_options([], [])
@@ -48,14 +49,13 @@ defmodule Mix.Tasks.Pow.Install do
 
   defp no_umbrella! do
     if Project.umbrella?() do
-      Mix.raise(
-        """
-        mix #{@mix_task} has to be used inside an application directory, but this is an umbrella project.
+      Mix.raise("""
+      mix #{@mix_task} has to be used inside an application directory, but this is an umbrella project.
 
-        Run mix pow.ecto.install inside your Ecto application directory to create schema module and migrations.
+      Run mix pow.ecto.install inside your Ecto application directory to create schema module and migrations.
 
-        Run mix pow.phoenix.install in your Phoenix application directory for configuration instructions.
-        """)
+      Run mix pow.phoenix.install in your Phoenix application directory for configuration instructions.
+      """)
     end
 
     :ok

@@ -4,7 +4,7 @@ defmodule Pow.Test.Phoenix.PowMail do
 
   def test(assigns) do
     %{
-      subject: ":web_mailer_module subject #{inspect assigns[:user]}",
+      subject: ":web_mailer_module subject #{inspect(assigns[:user])}",
       html: ~H"<p>:web_mailer_module html mail <%= inspect @user %></p>",
       text: ~P":web_mailer_module text mail <%= inspect @user %>"
     }

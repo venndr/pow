@@ -8,7 +8,7 @@ defmodule PowInvitation.Ecto.ContextTest do
   @config [repo: RepoMock, user: User]
 
   defmodule CustomUsers do
-    def get_by([invitation_token: :test]), do: %User{email: :ok}
+    def get_by(invitation_token: :test), do: %User{email: :ok}
   end
 
   describe "get_by_invitation_token/2" do
@@ -21,7 +21,8 @@ defmodule PowInvitation.Ecto.ContextTest do
     end
 
     test "with `:users_context`" do
-      assert %User{email: :ok} = Context.get_by_invitation_token(:test, @config ++ [users_context: CustomUsers])
+      assert %User{email: :ok} =
+               Context.get_by_invitation_token(:test, @config ++ [users_context: CustomUsers])
     end
   end
 end

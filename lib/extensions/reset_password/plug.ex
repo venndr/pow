@@ -48,7 +48,7 @@ defmodule PowResetPassword.Plug do
   @spec create_reset_token(Conn.t(), map()) :: {:ok, map(), Conn.t()} | {:error, map(), Conn.t()}
   def create_reset_token(conn, params) do
     config = Plug.fetch_config(conn)
-    token  = UUID.generate()
+    token = UUID.generate()
 
     params
     |> Map.get("email")
@@ -89,9 +89,8 @@ defmodule PowResetPassword.Plug do
   def load_user_by_token(conn, signed_token) do
     config = Plug.fetch_config(conn)
 
-    with {:ok, token}               <- Plug.verify_token(conn, signing_salt(), signed_token, config),
+    with {:ok, token} <- Plug.verify_token(conn, signing_salt(), signed_token, config),
          user when not is_nil(user) <- fetch_user_from_token(token, config) do
-
       conn =
         conn
         |> Conn.put_private(:pow_reset_password_decoded_token, token)
@@ -110,7 +109,7 @@ defmodule PowResetPassword.Plug do
     |> store.get(token)
     |> case do
       :not_found -> nil
-      user       -> user
+      user -> user
     end
   end
 
@@ -127,7 +126,7 @@ defmodule PowResetPassword.Plug do
     |> store.get(token)
     |> case do
       :not_found -> nil
-      user       -> user
+      user -> user
     end
   end
 
@@ -141,7 +140,8 @@ defmodule PowResetPassword.Plug do
   See `create_reset_token/2` for more on `:reset_password_token_store` config
   option.
   """
-  @spec update_user_password(Conn.t(), map()) :: {:ok, map(), Conn.t()} | {:error, map(), Conn.t()}
+  @spec update_user_password(Conn.t(), map()) ::
+          {:ok, map(), Conn.t()} | {:error, map(), Conn.t()}
   def update_user_password(conn, params) do
     config = Plug.fetch_config(conn)
 
@@ -163,8 +163,11 @@ defmodule PowResetPassword.Plug do
     {store, store_config} = store(config)
     store.delete(store_config, token)
   end
+
   defp expire_token(_conn, _config) do
-    IO.warn("no `:pow_reset_password_decoded_token` key found in `conn.private`, please call `#{inspect __MODULE__}.load_user_by_token/2` first")
+    IO.warn(
+      "no `:pow_reset_password_decoded_token` key found in `conn.private`, please call `#{inspect(__MODULE__)}.load_user_by_token/2` first"
+    )
 
     :ok
   end
@@ -176,7 +179,7 @@ defmodule PowResetPassword.Plug do
   defp store(config) do
     case Config.get(config, :reset_password_token_store) do
       {store, store_config} -> {store, store_opts(config, store_config)}
-      nil                   -> {ResetTokenCache, store_opts(config)}
+      nil -> {ResetTokenCache, store_opts(config)}
     end
   end
 

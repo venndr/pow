@@ -16,5 +16,6 @@ defmodule PowResetPassword.Test.RepoMock do
 
     {:ok, user}
   end
+
   def update(%{valid?: false} = changeset, _opts), do: {:error, %{changeset | action: :update}}
 end

@@ -47,8 +47,8 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.Migrations do
 
   defp create_migration_files(config, args) do
     context_base = Pow.app_base(Pow.otp_app())
-    context_app  = String.to_atom(Macro.underscore(context_base))
-    extensions   = Extension.extensions(config, context_app)
+    context_app = String.to_atom(Macro.underscore(context_base))
+    extensions = Extension.extensions(config, context_app)
 
     args
     |> Ecto.parse_repo()
@@ -63,23 +63,37 @@ defmodule Mix.Tasks.Pow.Extension.Ecto.Gen.Migrations do
     for extension <- extensions, do: create_migration_file(config, extension, context_base)
   end
 
-  defp create_migration_file(%{repo: repo, binary_id: binary_id} = config, extension, context_base) do
+  defp create_migration_file(
+         %{repo: repo, binary_id: binary_id} = config,
+         extension,
+         context_base
+       ) do
     schema_plural = Map.get(config, :schema_plural, "users")
-    schema        = SchemaMigration.new(extension, context_base, schema_plural, repo: repo, binary_id: binary_id)
-    content       = SchemaMigration.gen(schema)
+
+    schema =
+      SchemaMigration.new(extension, context_base, schema_plural, repo: repo, binary_id: binary_id)
+
+    content = SchemaMigration.gen(schema)
 
     case empty?(schema) do
-      true  -> Mix.shell().info("Notice: No migration file will be generated for #{inspect extension} as this extension doesn't require any migrations.")
-      false -> Migration.create_migration_file(repo, schema.migration_name, content)
+      true ->
+        Mix.shell().info(
+          "Notice: No migration file will be generated for #{inspect(extension)} as this extension doesn't require any migrations."
+        )
+
+      false ->
+        Migration.create_migration_file(repo, schema.migration_name, content)
     end
   end
 
   defp empty?(%{assocs: [], attrs: [], indexes: []}),
     do: true
+
   defp empty?(_schema), do: false
 
   defp print_shell_instructions(%{extensions: [], context_app: context_app}) do
     Extension.no_extensions_error(context_app)
   end
+
   defp print_shell_instructions(config), do: config
 end

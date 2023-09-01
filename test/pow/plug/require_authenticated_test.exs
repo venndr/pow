@@ -23,9 +23,11 @@ defmodule Pow.Plug.RequireAuthenticatedTest do
   @default_config [error_handler: __MODULE__.ErrorHandler]
 
   test "init/1 requires error handler" do
-    assert_raise ConfigError, "No :error_handler configuration option provided. It's required to set this when using Pow.Plug.RequireAuthenticated.", fn ->
-      RequireAuthenticated.init([])
-    end
+    assert_raise ConfigError,
+                 "No :error_handler configuration option provided. It's required to set this when using Pow.Plug.RequireAuthenticated.",
+                 fn ->
+                   RequireAuthenticated.init([])
+                 end
   end
 
   test "call/2", %{conn: conn} do
@@ -38,6 +40,7 @@ defmodule Pow.Plug.RequireAuthenticatedTest do
 
   test "call/2 with assigned user", %{conn: conn} do
     opts = RequireAuthenticated.init(@default_config)
+
     conn =
       conn
       |> Plug.assign_current_user("user", [])

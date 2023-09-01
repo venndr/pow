@@ -31,14 +31,17 @@ defmodule Mix.Tasks.Pow.Ecto.Gen.MigrationTest do
     File.cd!(context.tmp_path, fn ->
       Migration.run(@options)
 
-      assert_raise Mix.Error, "migration can't be created, there is already a migration file with name CreateUsers.", fn ->
-        Migration.run(@options)
-      end
+      assert_raise Mix.Error,
+                   "migration can't be created, there is already a migration file with name CreateUsers.",
+                   fn ->
+                     Migration.run(@options)
+                   end
     end)
   end
 
   test "generates with `:binary_id`", context do
     options = @options ++ ~w(--binary-id)
+
     File.cd!(context.tmp_path, fn ->
       Migration.run(options)
 
@@ -54,6 +57,7 @@ defmodule Mix.Tasks.Pow.Ecto.Gen.MigrationTest do
 
   test "generates with `:generators` config", context do
     Application.put_env(:pow, :generators, binary_id: true)
+
     on_exit(fn ->
       Application.delete_env(:pow, :generators)
     end)

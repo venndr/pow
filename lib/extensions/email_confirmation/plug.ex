@@ -54,7 +54,7 @@ defmodule PowEmailConfirmation.Plug do
   def load_user_by_token(conn, signed_token) do
     config = Plug.fetch_config(conn)
 
-    with {:ok, token}               <- Plug.verify_token(conn, signing_salt(), signed_token, config),
+    with {:ok, token} <- Plug.verify_token(conn, signing_salt(), signed_token, config),
          user when not is_nil(user) <- Context.get_by_confirmation_token(token, config) do
       {:ok, Conn.assign(conn, :confirm_email_user, user)}
     else
@@ -78,12 +78,15 @@ defmodule PowEmailConfirmation.Plug do
     |> Context.confirm_email(params, config)
     |> case do
       {:error, changeset} -> {:error, changeset, conn}
-      {:ok, user}         -> {:ok, user, maybe_renew_conn(conn, user, config)}
+      {:ok, user} -> {:ok, user, maybe_renew_conn(conn, user, config)}
     end
   end
+
   # TODO: Remove by 1.1.0
   def confirm_email(conn, token) when is_binary(token) do
-    IO.warn "#{unquote(__MODULE__)}.confirm_email/2 called with token is deprecated, use `load_user_by_token/2` and `confirm_email/2` with map as second argument instead"
+    IO.warn(
+      "#{unquote(__MODULE__)}.confirm_email/2 called with token is deprecated, use `load_user_by_token/2` and `confirm_email/2` with map as second argument instead"
+    )
 
     config = Plug.fetch_config(conn)
 
@@ -98,12 +101,13 @@ defmodule PowEmailConfirmation.Plug do
 
   defp maybe_renew_conn(conn, user, config) do
     case equal_user?(user, Plug.current_user(conn, config), config) do
-      true  -> Plug.create(conn, user, config)
+      true -> Plug.create(conn, user, config)
       false -> conn
     end
   end
 
   defp equal_user?(_user, nil, _config), do: false
+
   defp equal_user?(user, current_user, config) do
     {:ok, clauses1} = Operations.fetch_primary_key_values(user, config)
     {:ok, clauses2} = Operations.fetch_primary_key_values(current_user, config)
@@ -113,12 +117,13 @@ defmodule PowEmailConfirmation.Plug do
 
   # TODO: Remove by 1.1.0
   defp maybe_confirm_email(nil, conn, _config), do: {:error, nil, conn}
+
   defp maybe_confirm_email(user, conn, config) do
     user
     |> Context.confirm_email(%{}, config)
     |> case do
       {:error, changeset} -> {:error, changeset, conn}
-      {:ok, user}         -> {:ok, user, maybe_renew_conn(conn, user, config)}
+      {:ok, user} -> {:ok, user, maybe_renew_conn(conn, user, config)}
     end
   end
 end

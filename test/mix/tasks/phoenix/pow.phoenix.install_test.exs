@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
 
   alias Mix.Tasks.Pow.Phoenix.Install
 
-  @options     []
+  @options []
   @success_msg "Pow has been installed in your Phoenix app!"
 
   test "default", context do
@@ -21,37 +21,33 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
       assert_received {:mix_shell, :info, [^injecting_router_path_message]}
       assert_received {:mix_shell, :info, [@success_msg]}
 
-      expected_config =
-        """
-        config :pow, :pow,
-          user: Pow.Users.User,
-          repo: Pow.Repo
+      expected_config = """
+      config :pow, :pow,
+        user: Pow.Users.User,
+        repo: Pow.Repo
 
-        # Import environment specific config. This must remain at the bottom
-        """
+      # Import environment specific config. This must remain at the bottom
+      """
 
-      expected_endpoint =
-        """
-          plug Plug.Session, @session_options
-          plug Pow.Plug.Session, otp_app: :pow
-        """
+      expected_endpoint = """
+        plug Plug.Session, @session_options
+        plug Pow.Plug.Session, otp_app: :pow
+      """
 
-      expected_router_head =
-        """
-          use PowWeb, :router
-          use Pow.Phoenix.Router
-        """
+      expected_router_head = """
+        use PowWeb, :router
+        use Pow.Phoenix.Router
+      """
 
-      expected_router_body =
-        """
-          scope "/" do
-            pipe_through :browser
+      expected_router_body = """
+        scope "/" do
+          pipe_through :browser
 
-            pow_routes()
-          end
+          pow_routes()
+        end
 
-          scope "/", PowWeb do
-        """
+        scope "/", PowWeb do
+      """
 
       assert File.read!(context.paths.config_path) =~ expected_config
       assert File.read!(context.paths.endpoint_path) =~ expected_endpoint
@@ -65,9 +61,11 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
       File.rm_rf!(context.paths.web_path)
       File.rm_rf!(context.paths.config_path)
 
-      assert_raise Mix.Error, "Couldn't install Pow! Did you run this inside your Phoenix app?", fn ->
-        Install.run(@options)
-      end
+      assert_raise Mix.Error,
+                   "Couldn't install Pow! Did you run this inside your Phoenix app?",
+                   fn ->
+                     Install.run(@options)
+                   end
 
       assert_received {:mix_shell, :error, ["Could not find the following file(s)" <> msg]}
       assert msg =~ context.paths.config_path
@@ -94,7 +92,10 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
       assert msg =~ "config :pow, :pow,"
       assert msg =~ "user: Pow.Users.User,"
       assert msg =~ "repo: Pow.Repo"
-      assert msg =~ "Add the `Pow.Plug.Session` plug to lib/pow_web/endpoint.ex after the `Plug.Session` plug:"
+
+      assert msg =~
+               "Add the `Pow.Plug.Session` plug to lib/pow_web/endpoint.ex after the `Plug.Session` plug:"
+
       assert msg =~ "plug Pow.Plug.Session, otp_app: :pow"
       assert msg =~ "Update `lib/pow_web/router.ex` with the Pow routes:"
       assert msg =~ "use Pow.Phoenix.Router"
@@ -109,7 +110,11 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
 
       Install.run(@options)
 
-      for path <- [context.paths.config_path, context.paths.endpoint_path, context.paths.router_path] do
+      for path <- [
+            context.paths.config_path,
+            context.paths.endpoint_path,
+            context.paths.router_path
+          ] do
         message = "* already configured #{path}"
         assert_received {:mix_shell, :info, [^message]}
       end
@@ -130,15 +135,22 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
   end
 
   test "with extension templates", context do
-    options = @options ++ ~w(--templates --extension PowResetPassword --extension PowEmailConfirmation)
+    options =
+      @options ++ ~w(--templates --extension PowResetPassword --extension PowEmailConfirmation)
 
     File.cd!(context.tmp_path, fn ->
       Install.run(options)
 
       assert File.exists?(context.paths.templates_path)
-      reset_password_templates = Path.join([context.paths.web_path, "controllers", "pow_reset_password"])
+
+      reset_password_templates =
+        Path.join([context.paths.web_path, "controllers", "pow_reset_password"])
+
       assert [_one, _two] = File.ls!(reset_password_templates)
-      reset_password_templates = Path.join([context.paths.web_path, "controllers", "pow_reset_password"])
+
+      reset_password_templates =
+        Path.join([context.paths.web_path, "controllers", "pow_reset_password"])
+
       assert File.exists?(reset_password_templates)
       assert [_one, _two] = File.ls!(reset_password_templates)
     end)
@@ -165,6 +177,7 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
   describe "with `:generators` config set" do
     setup do
       Application.put_env(:pow, :generators, context_app: {:my_app, "my_app"})
+
       on_exit(fn ->
         Application.delete_env(:pow, :generators)
       end)
@@ -176,7 +189,7 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
 
         assert_received {:mix_shell, :info, [@success_msg]}
         assert_received {:mix_shell, :info, ["* injecting config/config.exs"]}
-        assert File.read!(context.paths.config_path) =~  "user: MyApp.Users.User,"
+        assert File.read!(context.paths.config_path) =~ "user: MyApp.Users.User,"
       end)
     end
   end
@@ -197,7 +210,9 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
         end
       end
       """)
+
       File.mkdir!("dep")
+
       File.write!("dep/mix.exs", """
       defmodule PhoenixDep.MixProject do
         use Mix.Project
@@ -216,13 +231,16 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
       Mix.Project.in_project(:missing_top_level_phoenix_dep, ".", fn _ ->
         # Insurance that we do test for top level phoenix inclusion
         assert Enum.any?(Mix.Dep.load_on_environment([]), fn
-          %{app: :phoenix} -> true
-          _ -> false
-        end), "Phoenix not loaded by dependency"
+                 %{app: :phoenix} -> true
+                 _ -> false
+               end),
+               "Phoenix not loaded by dependency"
 
-        assert_raise Mix.Error, "mix pow.phoenix.install can only be run inside an application directory that has :phoenix as dependency", fn ->
-          Install.run(@options)
-        end
+        assert_raise Mix.Error,
+                     "mix pow.phoenix.install can only be run inside an application directory that has :phoenix as dependency",
+                     fn ->
+                       Install.run(@options)
+                     end
       end)
     end)
   end
@@ -231,6 +249,7 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
   describe "with `:namespace` environment config set" do
     setup do
       Application.put_env(:pow, :namespace, POW)
+
       on_exit(fn ->
         Application.delete_env(:pow, :namespace)
       end)
@@ -250,20 +269,33 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
         assert config_content =~ "user: POW.Users.User,"
         assert config_content =~ "web_module: POWWeb,"
 
-        template_file = Path.join([context.paths.web_path, "controllers", "pow", "session_html.ex"])
+        template_file =
+          Path.join([context.paths.web_path, "controllers", "pow", "session_html.ex"])
+
         assert File.exists?(template_file)
         assert File.read!(template_file) =~ "defmodule POWWeb.Pow.SessionHTML do"
 
-        template_file = Path.join([context.paths.web_path, "controllers", "pow_reset_password", "reset_password_html.ex"])
+        template_file =
+          Path.join([
+            context.paths.web_path,
+            "controllers",
+            "pow_reset_password",
+            "reset_password_html.ex"
+          ])
+
         assert File.exists?(template_file)
-        assert File.read!(template_file) =~ "defmodule POWWeb.PowResetPassword.ResetPasswordHTML do"
+
+        assert File.read!(template_file) =~
+                 "defmodule POWWeb.PowResetPassword.ResetPasswordHTML do"
       end)
     end
   end
 
   @tag web_module: "MyAppWeb", context_module: "MyApp"
   test "uses web app inside Phoenix umbrella app", context do
-    options = @options ++ ~w(--templates --extension PowResetPassword --extension PowEmailConfirmation)
+    options =
+      @options ++ ~w(--templates --extension PowResetPassword --extension PowEmailConfirmation)
+
     File.cd!(context.tmp_path, fn ->
       File.write!("mix.exs", """
       defmodule MyAppWeb.MixProject do
@@ -290,18 +322,23 @@ defmodule Mix.Tasks.Pow.Phoenix.InstallTest do
         assert_received {:mix_shell, :info, ["Pow Phoenix templates has been generated."]}
 
         assert File.read!(context.paths.config_path) =~
-          """
-          config :my_app_web, :pow,
-            web_module: MyAppWeb,
-            user: MyApp.Users.User,
-            repo: MyApp.Repo
-          """
+                 """
+                 config :my_app_web, :pow,
+                   web_module: MyAppWeb,
+                   user: MyApp.Users.User,
+                   repo: MyApp.Repo
+                 """
 
         assert_received {:mix_shell, :info, ["* injecting lib/my_app_web/endpoint.ex"]}
-        assert File.read!(context.paths.endpoint_path) =~ "plug Pow.Plug.Session, otp_app: :my_app_web"
+
+        assert File.read!(context.paths.endpoint_path) =~
+                 "plug Pow.Plug.Session, otp_app: :my_app_web"
 
         assert File.exists?(Path.join([context.paths.web_path, "controllers", "pow"]))
-        assert File.exists?(Path.join([context.paths.web_path, "controllers", "pow_reset_password"]))
+
+        assert File.exists?(
+                 Path.join([context.paths.web_path, "controllers", "pow_reset_password"])
+               )
       end)
     end)
   end

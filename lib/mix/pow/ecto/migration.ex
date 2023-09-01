@@ -7,7 +7,9 @@ defmodule Mix.Pow.Ecto.Migration do
   # TODO: Remove by 1.1.0
   @doc false
   @deprecated "Use `create_migration_file/3`"
-  defdelegate create_migration_files(repo, name, content), to: __MODULE__, as: :create_migration_file
+  defdelegate create_migration_files(repo, name, content),
+    to: __MODULE__,
+    as: :create_migration_file
 
   @doc """
   Creates a migration file for a repo.
@@ -15,11 +17,13 @@ defmodule Mix.Pow.Ecto.Migration do
   @spec create_migration_file(atom(), binary(), binary()) :: any()
   def create_migration_file(repo, name, content) do
     base_name = "#{Macro.underscore(name)}.exs"
-    path      =
+
+    path =
       repo
       |> source_repo_priv()
       |> Path.join("migrations")
       |> maybe_create_directory()
+
     timestamp = timestamp(path)
 
     path
@@ -39,8 +43,13 @@ defmodule Mix.Pow.Ecto.Migration do
     |> Path.join("*_#{base_name}")
     |> Path.wildcard()
     |> case do
-      [] -> path
-      _  -> Mix.raise("migration can't be created, there is already a migration file with name #{name}.")
+      [] ->
+        path
+
+      _ ->
+        Mix.raise(
+          "migration can't be created, there is already a migration file with name #{name}."
+        )
     end
   end
 
@@ -52,7 +61,7 @@ defmodule Mix.Pow.Ecto.Migration do
     |> Path.wildcard()
     |> case do
       [] -> timestamp
-      _  -> timestamp(path, seconds + 1)
+      _ -> timestamp(path, seconds + 1)
     end
   end
 

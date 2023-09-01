@@ -39,7 +39,10 @@ defmodule Pow.Ecto.Schema.Password.Pbkdf2Test do
     test "generates hash" do
       key = Pbkdf2.generate(@secret, @salt, @iterations, @length, @digest)
       assert byte_size(key) == @length
-      assert key == <<168, 236, 50, 221, 154, 138, 163, 60, 82, 206, 193, 197, 48, 48, 74, 247, 200, 9, 195, 135>>
+
+      assert key ==
+               <<168, 236, 50, 221, 154, 138, 163, 60, 82, 206, 193, 197, 48, 48, 74, 247, 200, 9,
+                 195, 135>>
     end
   end
 end

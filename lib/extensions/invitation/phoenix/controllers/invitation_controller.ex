@@ -7,12 +7,12 @@ defmodule PowInvitation.Phoenix.InvitationController do
   alias Pow.Plug, as: PowPlug
   alias PowInvitation.{Phoenix.Mailer, Plug}
 
-  plug :require_authenticated when action in [:new, :create, :show]
-  plug :require_not_authenticated when action in [:edit, :update]
-  plug :load_user_from_invitation_token when action in [:show, :edit, :update]
-  plug :assign_create_path when action in [:new, :create]
-  plug :assign_update_path when action in [:edit, :update]
-  plug :put_no_cache_header when action in [:edit]
+  plug(:require_authenticated when action in [:new, :create, :show])
+  plug(:require_not_authenticated when action in [:edit, :update])
+  plug(:load_user_from_invitation_token when action in [:show, :edit, :update])
+  plug(:assign_create_path when action in [:new, :create])
+  plug(:assign_update_path when action in [:edit, :update])
+  plug(:put_no_cache_header when action in [:edit])
 
   @spec process_new(Conn.t(), map()) :: {:ok, map(), Conn.t()}
   def process_new(conn, _params) do
@@ -37,14 +37,16 @@ defmodule PowInvitation.Phoenix.InvitationController do
 
     invitation_sent_redirect(conn)
   end
+
   def respond_create({:ok, user, conn}) do
     token = Plug.sign_invitation_token(conn, user)
 
     redirect(conn, to: routes(conn).path_for(conn, __MODULE__, :show, [token]))
   end
+
   def respond_create({:error, changeset, conn}) do
     case PowPlug.__prevent_user_enumeration__(conn, changeset) do
-      true  ->
+      true ->
         invitation_sent_redirect(conn)
 
       false ->
@@ -55,9 +57,9 @@ defmodule PowInvitation.Phoenix.InvitationController do
   end
 
   defp deliver_email(conn, user) do
-    url        = invitation_url(conn, user)
+    url = invitation_url(conn, user)
     invited_by = PowPlug.current_user(conn)
-    email      = Mailer.invitation(conn, user, invited_by, url)
+    email = Mailer.invitation(conn, user, invited_by, url)
 
     Pow.Phoenix.Mailer.deliver(conn, email)
   end
@@ -107,6 +109,7 @@ defmodule PowInvitation.Phoenix.InvitationController do
     |> put_flash(:info, messages(conn).user_has_been_created(conn))
     |> redirect(to: routes(conn).after_registration_path(conn))
   end
+
   def respond_update({:error, changeset, conn}) do
     conn
     |> assign(:changeset, changeset)
@@ -115,7 +118,7 @@ defmodule PowInvitation.Phoenix.InvitationController do
 
   defp load_user_from_invitation_token(%{params: %{"id" => token}} = conn, _opts) do
     case Plug.load_invited_user_by_token(conn, token) do
-      {:error, conn}  ->
+      {:error, conn} ->
         conn
         |> put_flash(:error, extension_messages(conn).invalid_invitation(conn))
         |> redirect(to: routes(conn).path_for(conn, SessionController, :new))

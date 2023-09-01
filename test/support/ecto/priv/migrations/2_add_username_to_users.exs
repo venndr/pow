@@ -3,9 +3,10 @@ defmodule Pow.Test.Ecto.Repo.Migrations.AddUsernameToUsers do
 
   def change do
     alter table(:users) do
-      add :username, :string
-      modify :email, :string, null: true
+      add(:username, :string)
+      modify(:email, :string, null: true)
     end
-    create unique_index(:users, [:username])
+
+    create(unique_index(:users, [:username]))
   end
 end

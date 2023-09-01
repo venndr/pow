@@ -10,15 +10,14 @@ defmodule Mix.Pow.Phoenix.Mailer do
   @spec create_mail_module(atom(), [atom()], atom(), binary()) :: :ok
   def create_mail_module(module, mails, web_module, web_prefix) do
     templates = template_functions(module, mails)
-    path      = Path.join([web_prefix, "mails", "#{Macro.underscore(module)}_mail.ex"])
+    path = Path.join([web_prefix, "mails", "#{Macro.underscore(module)}_mail.ex"])
 
-    content =
-      """
-      defmodule #{inspect(web_module)}.#{inspect(module)}Mail do
-        use #{inspect(web_module)}, :mail
-      #{templates |> Enum.join("\n") |> indent("  ")}
-      end
-      """
+    content = """
+    defmodule #{inspect(web_module)}.#{inspect(module)}Mail do
+      use #{inspect(web_module)}, :mail
+    #{templates |> Enum.join("\n") |> indent("  ")}
+    end
+    """
 
     Generator.create_file(path, content)
 
@@ -35,7 +34,7 @@ defmodule Mix.Pow.Phoenix.Mailer do
           subject: \"#{mail_module.subject(mail)}\",
           html: ~H\"""#{indent(mail_module.html(mail), "      ")}
             ""\",
-          text: ~P\"""#{indent(mail_module.text(mail),  "      ")}
+          text: ~P\"""#{indent(mail_module.text(mail), "      ")}
             ""\"
         }
       end

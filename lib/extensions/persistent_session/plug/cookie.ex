@@ -99,8 +99,8 @@ defmodule PowPersistentSession.Plug.Cookie do
 
   defp before_send_create(conn, user, config) do
     {store, store_config} = store(config)
-    token                 = gen_token(config)
-    value                 = persistent_session_value(conn, user)
+    token = gen_token(config)
+    value = persistent_session_value(conn, user)
 
     register_before_send(conn, fn conn ->
       store.put(store_config, token, value)
@@ -192,7 +192,7 @@ defmodule PowPersistentSession.Plug.Cookie do
   @spec authenticate(Conn.t(), Config.t()) :: Conn.t()
   def authenticate(conn, config) do
     case client_store_fetch(conn, config) do
-      {nil, conn}   -> conn
+      {nil, conn} -> conn
       {token, conn} -> do_authenticate(conn, token, config)
     end
   end
@@ -215,7 +215,7 @@ defmodule PowPersistentSession.Plug.Cookie do
   end
 
   defp lock_auth_user(conn, token, user, metadata, config) do
-    id    = {[__MODULE__, token], self()}
+    id = {[__MODULE__, token], self()}
     nodes = Node.list() ++ [node()]
 
     case :global.set_lock(id, nodes, 0) do
@@ -299,7 +299,7 @@ defmodule PowPersistentSession.Plug.Cookie do
     conn = Conn.fetch_cookies(conn)
 
     with token when is_binary(token) <- conn.cookies[cookie_key(config)],
-         {:ok, token}                <- Plug.verify_token(conn, signing_salt(), token, config) do
+         {:ok, token} <- Plug.verify_token(conn, signing_salt(), token, config) do
       {token, conn}
     else
       _any -> {nil, conn}
@@ -346,7 +346,9 @@ defmodule PowPersistentSession.Plug.Cookie do
         |> Integer.floor_div(1000)
 
       max_age ->
-        IO.warn("use of `:persistent_session_cookie_max_age` config value in #{inspect unquote(__MODULE__)} is deprecated, please use `:persistent_session_ttl`")
+        IO.warn(
+          "use of `:persistent_session_cookie_max_age` config value in #{inspect(unquote(__MODULE__))} is deprecated, please use `:persistent_session_ttl`"
+        )
 
         max_age
     end

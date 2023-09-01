@@ -39,7 +39,7 @@ defmodule Pow.Extension.Phoenix.Router.Base do
       @doc false
       defmacro scoped_routes(config) do
         phoenix_module = unquote(extension).Phoenix
-        namespace      = unquote(__MODULE__).__namespace__(unquote(extension))
+        namespace = unquote(__MODULE__).__namespace__(unquote(extension))
 
         quote location: :keep do
           require unquote(__MODULE__)

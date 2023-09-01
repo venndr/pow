@@ -76,7 +76,8 @@ defmodule Pow.Phoenix.Template do
             end
           end
         end,
-        Macro.Env.location(__ENV__))
+        Macro.Env.location(__ENV__)
+      )
     end
   end
 
@@ -89,11 +90,12 @@ defmodule Pow.Phoenix.Template do
   """
   @spec template(atom(), atom(), binary() | {atom(), any()}) :: Macro.t()
   defmacro template(action, :html, content) do
-    content = "<% import #{__MODULE__}, only: [__inline_route__: 2, __user_id_field__: 2] %>#{content}"
-
     content =
-      # Credo will complain about unless statement but we want this first
-      # credo:disable-for-next-line
+      "<% import #{__MODULE__}, only: [__inline_route__: 2, __user_id_field__: 2] %>#{content}"
+
+    # Credo will complain about unless statement but we want this first
+    # credo:disable-for-next-line
+    content =
       unless Pow.dependency_vsn_match?(:phoenix, "< 1.7.0") do
         content
       else
@@ -101,10 +103,10 @@ defmodule Pow.Phoenix.Template do
         "<% import #{Pow.Phoenix.HTML.FormTemplate}, only: [render_form: 1, render_form: 2] %>#{content}"
       end
 
+    # TODO: Remove when Phoenix 1.7 required and fallback templates removed
+    # Credo will complain about unless statement but we want this first
+    # credo:disable-for-next-line
     content =
-      # TODO: Remove when Phoenix 1.7 required and fallback templates removed
-      # Credo will complain about unless statement but we want this first
-      # credo:disable-for-next-line
       unless Pow.dependency_vsn_match?(:phoenix, "< 1.7.0") do
         String.replace(content, "<%= render_form", "<%% render_form")
       else
@@ -117,11 +119,12 @@ defmodule Pow.Phoenix.Template do
         [],
         file: __CALLER__.file,
         line: __CALLER__.line + 1,
-        caller: __CALLER__)
+        caller: __CALLER__
+      )
 
+    # Credo will complain about unless statement but we want this first
+    # credo:disable-for-next-line
     opts =
-      # Credo will complain about unless statement but we want this first
-      # credo:disable-for-next-line
       unless Pow.dependency_vsn_match?(:phoenix, "< 1.7.0") do
         [
           engine: Phoenix.LiveView.TagEngine,
@@ -129,7 +132,8 @@ defmodule Pow.Phoenix.Template do
           line: __CALLER__.line + 1,
           caller: __CALLER__,
           source: expr,
-          tag_handler: Phoenix.LiveView.HTMLEngine]
+          tag_handler: Phoenix.LiveView.HTMLEngine
+        ]
       else
         # TODO: Remove when Phoenix 1.7 required
         [
@@ -137,7 +141,8 @@ defmodule Pow.Phoenix.Template do
           file: __CALLER__.file,
           line: __CALLER__.line + 1,
           caller: __CALLER__,
-          source: expr]
+          source: expr
+        ]
       end
 
     quoted = EEx.compile_string(expr, opts)
@@ -155,12 +160,12 @@ defmodule Pow.Phoenix.Template do
   @doc false
   if Code.ensure_loaded?(Phoenix.VerifiedRoutes) do
     def __inline_route__(plug, plug_opts) do
-      "Pow.Phoenix.Routes.path_for(@conn, #{inspect plug}, #{inspect plug_opts})"
+      "Pow.Phoenix.Routes.path_for(@conn, #{inspect(plug)}, #{inspect(plug_opts)})"
     end
   else
     # TODO: Remove when Phoenix 1.7 is required
     def __inline_route__(plug, plug_opts) do
-      "Routes.#{Pow.Phoenix.Controller.route_helper(plug)}_path(@conn, #{inspect plug_opts}) %>"
+      "Routes.#{Pow.Phoenix.Controller.route_helper(plug)}_path(@conn, #{inspect(plug_opts)}) %>"
     end
   end
 
@@ -168,9 +173,11 @@ defmodule Pow.Phoenix.Template do
   def __user_id_field__(type, :key) do
     "Pow.Ecto.Schema.user_id_field(#{type})"
   end
+
   def __user_id_field__(type, :type) do
     "Pow.Ecto.Schema.user_id_field(#{type}) == :email && \"email\" || \"text\""
   end
+
   def __user_id_field__(type, :label) do
     "Phoenix.Naming.humanize(Pow.Ecto.Schema.user_id_field(#{type}))"
   end

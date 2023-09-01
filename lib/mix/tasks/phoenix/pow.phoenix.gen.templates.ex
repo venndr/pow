@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.Templates do
   ]
 
   defp create_template_files({config, _parsed, _invalid}) do
-    structure  = Phoenix.parse_structure(config)
+    structure = Phoenix.parse_structure(config)
     web_module = structure[:web_module]
     web_prefix = structure[:web_prefix]
 
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.Templates do
         config
 
       :error ->
-        Mix.raise "Couldn't configure Pow! Did you run this inside your Phoenix app?"
+        Mix.raise("Couldn't configure Pow! Did you run this inside your Phoenix app?")
     end
   end
 
@@ -70,20 +70,21 @@ defmodule Mix.Tasks.Pow.Phoenix.Gen.Templates do
 
     %{
       file: file,
-      injections: [%{
-        content: content,
-        test: "web_module: #{inspect(structure.web_module)}",
-        needle: "config #{inspect(structure.web_app)}, :pow,"
-      }],
-      instructions:
-        """
-        Add `#{String.trim(content)}` to your configuration in #{Path.relative_to_cwd(file)}:
+      injections: [
+        %{
+          content: content,
+          test: "web_module: #{inspect(structure.web_module)}",
+          needle: "config #{inspect(structure.web_app)}, :pow,"
+        }
+      ],
+      instructions: """
+      Add `#{String.trim(content)}` to your configuration in #{Path.relative_to_cwd(file)}:
 
-        config #{inspect(structure.web_app)}, :pow,
-        #{content}
-          user: #{inspect(structure.context_base)}.#{schema_opts.schema_name},
-          # ...
-        """
+      config #{inspect(structure.web_app)}, :pow,
+      #{content}
+        user: #{inspect(structure.context_base)}.#{schema_opts.schema_name},
+        # ...
+      """
     }
   end
 end

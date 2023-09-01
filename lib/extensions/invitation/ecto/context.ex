@@ -9,7 +9,8 @@ defmodule PowInvitation.Ecto.Context do
 
   See `PowInvitation.Ecto.Schema.invite_changeset/3`.
   """
-  @spec create(Context.user(), map(), Config.t()) :: {:ok, Context.user()} | {:error, Context.changeset()}
+  @spec create(Context.user(), map(), Config.t()) ::
+          {:ok, Context.user()} | {:error, Context.changeset()}
   def create(inviter_user, params, config) do
     user_mod = Config.user!(config)
 
@@ -24,7 +25,8 @@ defmodule PowInvitation.Ecto.Context do
 
   See `PowInvitation.Ecto.Schema.accept_invitation_changeset/2`.
   """
-  @spec update(Context.user(), map(), Config.t()) :: {:ok, Context.user()} | {:error, Context.changeset()}
+  @spec update(Context.user(), map(), Config.t()) ::
+          {:ok, Context.user()} | {:error, Context.changeset()}
   def update(%user_mod{} = user, params, config) do
     user
     |> user_mod.accept_invitation_changeset(params)

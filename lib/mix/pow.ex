@@ -29,7 +29,9 @@ defmodule Mix.Pow do
         :ok
 
       false ->
-        Mix.raise("mix #{task} can only be run inside an application directory that has #{inspect dep} as dependency")
+        Mix.raise(
+          "mix #{task} can only be run inside an application directory that has #{inspect(dep)} as dependency"
+        )
     end
   end
 
@@ -41,9 +43,16 @@ defmodule Mix.Pow do
     deps = Dep.load_on_environment([])
 
     cond do
-      top_level_dep_in_deps?(deps, :ecto) -> :ok
-      top_level_dep_in_deps?(deps, :ecto_sql) -> :ok
-      true -> Mix.raise("mix #{task} can only be run inside an application directory that has :ecto or :ecto_sql as dependency")
+      top_level_dep_in_deps?(deps, :ecto) ->
+        :ok
+
+      top_level_dep_in_deps?(deps, :ecto_sql) ->
+        :ok
+
+      true ->
+        Mix.raise(
+          "mix #{task} can only be run inside an application directory that has :ecto or :ecto_sql as dependency"
+        )
     end
   end
 
@@ -63,23 +72,29 @@ defmodule Mix.Pow do
     |> Dep.load_on_environment()
     |> top_level_dep_in_deps?(:phoenix)
     |> case do
-      true -> :ok
-      false -> Mix.raise("mix #{task} can only be run inside an application directory that has :phoenix as dependency")
+      true ->
+        :ok
+
+      false ->
+        Mix.raise(
+          "mix #{task} can only be run inside an application directory that has :phoenix as dependency"
+        )
     end
   end
 
   @doc """
   Parses argument options into a map.
   """
-  @spec parse_options(OptionParser.argv(), Keyword.t(), Keyword.t()) :: {map(), OptionParser.argv(), OptionParser.errors()}
+  @spec parse_options(OptionParser.argv(), Keyword.t(), Keyword.t()) ::
+          {map(), OptionParser.argv(), OptionParser.errors()}
   def parse_options(args, switches, default_opts) do
     generator_opts = parse_context_app(Application.get_env(otp_app(), :generators, []))
-    default_opts   = Keyword.merge(default_opts, generator_opts)
+    default_opts = Keyword.merge(default_opts, generator_opts)
 
     {opts, parsed, invalid} = OptionParser.parse(args, switches: switches)
-    default_opts            = to_map(default_opts)
-    opts                    = context_app_to_atom(to_map(opts))
-    config                  = Map.merge(default_opts, opts)
+    default_opts = to_map(default_opts)
+    opts = context_app_to_atom(to_map(opts))
+    config = Map.merge(default_opts, opts)
 
     {config, parsed, invalid}
   end
@@ -87,7 +102,7 @@ defmodule Mix.Pow do
   defp parse_context_app(options) do
     case options[:context_app] do
       {context_app, _path} -> Keyword.put(options, :context_app, context_app)
-      _context_app         -> options
+      _context_app -> options
     end
   end
 
@@ -106,6 +121,7 @@ defmodule Mix.Pow do
 
   defp context_app_to_atom(%{context_app: context_app} = config),
     do: Map.put(config, :context_app, String.to_atom(context_app))
+
   defp context_app_to_atom(config),
     do: config
 
@@ -114,7 +130,10 @@ defmodule Mix.Pow do
   """
   @spec schema_options_from_args([binary()]) :: map()
   def schema_options_from_args(_opts \\ [])
-  def schema_options_from_args([schema, plural | _rest]), do: %{schema_name: schema, schema_plural: plural}
+
+  def schema_options_from_args([schema, plural | _rest]),
+    do: %{schema_name: schema, schema_plural: plural}
+
   def schema_options_from_args(_any), do: %{schema_name: "Users.User", schema_plural: "users"}
 
   @doc false
@@ -122,16 +141,26 @@ defmodule Mix.Pow do
   def validate_schema_args!([schema, plural | _rest] = args, task) do
     cond do
       not schema_valid?(schema) ->
-        raise_invalid_schema_args_error!("Expected the schema argument, #{inspect schema}, to be a valid module name", task)
+        raise_invalid_schema_args_error!(
+          "Expected the schema argument, #{inspect(schema)}, to be a valid module name",
+          task
+        )
+
       not plural_valid?(plural) ->
-        raise_invalid_schema_args_error!("Expected the plural argument, #{inspect plural}, to be all lowercase using snake_case convention", task)
+        raise_invalid_schema_args_error!(
+          "Expected the plural argument, #{inspect(plural)}, to be all lowercase using snake_case convention",
+          task
+        )
+
       true ->
         schema_options_from_args(args)
     end
   end
+
   def validate_schema_args!([_schema | _rest], task) do
     raise_invalid_schema_args_error!("Invalid arguments", task)
   end
+
   def validate_schema_args!([], _task), do: schema_options_from_args()
 
   defp schema_valid?(schema), do: schema =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
@@ -159,10 +188,10 @@ defmodule Mix.Pow do
     |> Application.get_env(:generators, [])
     |> Keyword.get(:context_app)
     |> case do
-      nil          -> this_app
-      false        -> Mix.raise("No context_app configured for current application")
+      nil -> this_app
+      false -> Mix.raise("No context_app configured for current application")
       {app, _path} -> app
-      app          -> app
+      app -> app
     end
   end
 
@@ -252,7 +281,7 @@ defmodule Mix.Pow do
         #{Enum.map_join(file_injections, "\n", &Path.relative_to_cwd(&1.file))}
         """)
 
-        Mix.shell.info("""
+        Mix.shell().info("""
         To complete please do the following:
 
         #{Enum.map_join(file_injections, "\n", & &1.instructions)}
@@ -280,9 +309,9 @@ defmodule Mix.Pow do
   end
 
   defp process_file_injections(file_injections) do
-    with :ok             <- check_all_files_exists(file_injections),
+    with :ok <- check_all_files_exists(file_injections),
          file_injections <- read_files(file_injections),
-         :ok             <- check_all_files_can_be_updated(file_injections) do
+         :ok <- check_all_files_can_be_updated(file_injections) do
       {:ok, Enum.map(file_injections, &prepare_content/1)}
     end
   end
@@ -304,7 +333,7 @@ defmodule Mix.Pow do
   defp check_all_files_can_be_updated(file_injections) do
     file_injections
     |> Enum.reject(fn file_injection ->
-      injections = Enum.reject(file_injection.injections, & file_injection.content =~ &1.needle)
+      injections = Enum.reject(file_injection.injections, &(file_injection.content =~ &1.needle))
 
       injections == []
     end)
@@ -317,7 +346,7 @@ defmodule Mix.Pow do
   defp prepare_content(file_injection) do
     file_injection = Map.put(file_injection, :touched?, false)
 
-    case Enum.reject(file_injection.injections, & file_injection.content =~ &1.test) do
+    case Enum.reject(file_injection.injections, &(file_injection.content =~ &1.test)) do
       [] ->
         file_injection
 
@@ -333,7 +362,7 @@ defmodule Mix.Pow do
   defp inject_content(injections, content) do
     Enum.reduce(injections, content, fn injection, content ->
       content_lines = String.split(content, "\n")
-      index = Enum.find_index(content_lines, & &1 =~ injection.needle)
+      index = Enum.find_index(content_lines, &(&1 =~ injection.needle))
 
       index =
         case injection[:prepend] do

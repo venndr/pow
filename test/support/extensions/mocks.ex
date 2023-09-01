@@ -30,11 +30,12 @@ defmodule Pow.Test.ExtensionMocks do
 
   defmacro __using__(opts) do
     context_module = __CALLER__.module
-    web_module     = String.to_atom("#{context_module}Web")
-    cache_backend  = Pow.Test.EtsCacheMock
-    extensions     = opts[:extensions]
-    user_module    = Module.concat([context_module, Users.User])
-    config         = [
+    web_module = String.to_atom("#{context_module}Web")
+    cache_backend = Pow.Test.EtsCacheMock
+    extensions = opts[:extensions]
+    user_module = Module.concat([context_module, Users.User])
+
+    config = [
       user: user_module,
       repo: Module.concat([context_module, RepoMock]),
       cache_store_backend: cache_backend,
@@ -64,162 +65,180 @@ defmodule Pow.Test.ExtensionMocks do
     module = Module.concat(context_module, Keyword.get(opts, :module, Users.User))
     config = Keyword.take(opts, [:user_id_field]) ++ [extensions: extensions]
 
-    quoted = quote do
-      use Ecto.Schema
-      use Pow.Ecto.Schema, unquote(config)
-      use Pow.Extension.Ecto.Schema
+    quoted =
+      quote do
+        use Ecto.Schema
+        use Pow.Ecto.Schema, unquote(config)
+        use Pow.Extension.Ecto.Schema
 
-      schema "users" do
-        pow_user_fields()
+        schema "users" do
+          pow_user_fields()
 
-        timestamps()
+          timestamps()
+        end
+
+        def changeset(user_or_changeset, attrs) do
+          user_or_changeset
+          |> pow_changeset(attrs)
+          |> pow_extension_changeset(attrs)
+        end
       end
-
-      def changeset(user_or_changeset, attrs) do
-        user_or_changeset
-        |> pow_changeset(attrs)
-        |> pow_extension_changeset(attrs)
-      end
-    end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
   def __phoenix_endpoint__(web_module, config, opts) do
     module = Module.concat([web_module, Phoenix.Router])
-    quoted = quote do
-      use Phoenix.Router, helpers: false
-      use Pow.Phoenix.Router
-      use Pow.Extension.Phoenix.Router, unquote(config)
 
-      pipeline :browser do
-        plug :accepts, ["html"]
-        plug :fetch_session
-        plug :fetch_flash
-        plug :protect_from_forgery
-        plug :put_secure_browser_headers
+    quoted =
+      quote do
+        use Phoenix.Router, helpers: false
+        use Pow.Phoenix.Router
+        use Pow.Extension.Phoenix.Router, unquote(config)
+
+        pipeline :browser do
+          plug(:accepts, ["html"])
+          plug(:fetch_session)
+          plug(:fetch_flash)
+          plug(:protect_from_forgery)
+          plug(:put_secure_browser_headers)
+        end
+
+        scope "/" do
+          pipe_through(:browser)
+
+          pow_routes()
+          pow_extension_routes()
+        end
       end
-
-      scope "/" do
-        pipe_through :browser
-
-        pow_routes()
-        pow_extension_routes()
-      end
-    end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
 
     module = Module.concat([web_module, Phoenix.Endpoint])
-    quoted = quote do
-      defmodule SessionPlugHelper do
-        @moduledoc false
 
-        alias Pow.Plug.Session
+    quoted =
+      quote do
+        defmodule SessionPlugHelper do
+          @moduledoc false
 
-        def init(config), do: Session.init(config)
+          alias Pow.Plug.Session
 
-        def call(conn, config), do: Session.call(conn, Keyword.merge(config, conn.private[:pow_test_config] || []))
+          def init(config), do: Session.init(config)
+
+          def call(conn, config),
+            do: Session.call(conn, Keyword.merge(config, conn.private[:pow_test_config] || []))
+        end
+
+        use Phoenix.Endpoint, otp_app: :pow
+
+        @session_options [
+          store: :cookie,
+          key: "_binaryid_key",
+          signing_salt: "secret"
+        ]
+
+        @pow_config unquote(config)
+
+        plug(Plug.RequestId)
+        plug(Plug.Logger)
+
+        plug(Plug.Parsers,
+          parsers: [:urlencoded, :multipart, :json],
+          pass: ["*/*"],
+          json_decoder: Phoenix.json_library()
+        )
+
+        plug(Plug.MethodOverride)
+        plug(Plug.Head)
+
+        plug(Plug.Session, @session_options)
+        plug(SessionPlugHelper, @pow_config)
+
+        if unquote(opts[:plug]) do
+          Code.ensure_compiled(unquote(opts[:plug]))
+          plug(unquote(opts[:plug]))
+        end
+
+        plug(unquote(web_module).Phoenix.Router)
       end
-
-      use Phoenix.Endpoint, otp_app: :pow
-
-      @session_options [
-        store: :cookie,
-        key: "_binaryid_key",
-        signing_salt: "secret"
-      ]
-
-      @pow_config unquote(config)
-
-      plug Plug.RequestId
-      plug Plug.Logger
-
-      plug Plug.Parsers,
-        parsers: [:urlencoded, :multipart, :json],
-        pass: ["*/*"],
-        json_decoder: Phoenix.json_library()
-
-      plug Plug.MethodOverride
-      plug Plug.Head
-
-      plug Plug.Session, @session_options
-      plug SessionPlugHelper, @pow_config
-      if unquote(opts[:plug]) do
-        Code.ensure_compiled(unquote(opts[:plug]))
-        plug unquote(opts[:plug])
-      end
-      plug unquote(web_module).Phoenix.Router
-    end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
   def __conn_case__(web_module, cache_backend) do
     module = Module.concat([web_module, Phoenix.ConnCase])
-    quoted = quote do
-      use ExUnit.CaseTemplate
-      alias Pow.Test.Phoenix.ControllerAssertions
-      alias unquote(web_module).Phoenix.{Endpoint, Router}
 
-      using do
-        quote do
-          import Plug.Conn
-          import Phoenix.ConnTest, except: [get_flash: 2]
-          import Pow.Test.Phoenix.ConnCase, only: [get_flash: 2]
-          import ControllerAssertions
+    quoted =
+      quote do
+        use ExUnit.CaseTemplate
+        alias Pow.Test.Phoenix.ControllerAssertions
+        alias unquote(web_module).Phoenix.{Endpoint, Router}
 
-          @endpoint Endpoint
+        using do
+          quote do
+            import Plug.Conn
+            import Phoenix.ConnTest, except: [get_flash: 2]
+            import Pow.Test.Phoenix.ConnCase, only: [get_flash: 2]
+            import ControllerAssertions
 
-          use Phoenix.VerifiedRoutes,
-            endpoint: Endpoint,
-            router: Router,
-            statics: ~w()
+            @endpoint Endpoint
+
+            use Phoenix.VerifiedRoutes,
+              endpoint: Endpoint,
+              router: Router,
+              statics: ~w()
+          end
+        end
+
+        setup do
+          unquote(cache_backend).init()
+          {:ok, conn: Phoenix.ConnTest.build_conn(), ets: unquote(cache_backend)}
         end
       end
-
-      setup do
-        unquote(cache_backend).init()
-        {:ok, conn: Phoenix.ConnTest.build_conn(), ets: unquote(cache_backend)}
-      end
-    end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
   def __phoenix_layouts__(web_module) do
     module = Module.concat([web_module, Phoenix.Layouts])
-    quoted = quote do
-      use Pow.Test.Phoenix.Web, :html
 
-      embed_templates "../phoenix/components/layouts/*.html"
-    end
+    quoted =
+      quote do
+        use Pow.Test.Phoenix.Web, :html
+
+        embed_templates("../phoenix/components/layouts/*.html")
+      end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
   def __messages__(web_module, extensions) do
     module = Module.concat([web_module, Phoenix.Messages])
-    quoted = quote do
-      use Pow.Phoenix.Messages
-      use Pow.Extension.Phoenix.Messages,
-        extensions: unquote(extensions)
 
-      def signed_in(_conn), do: "signed_in"
-      def user_has_been_created(_conn), do: "user_created"
-    end
+    quoted =
+      quote do
+        use Pow.Phoenix.Messages
+
+        use Pow.Extension.Phoenix.Messages,
+          extensions: unquote(extensions)
+
+        def signed_in(_conn), do: "signed_in"
+        def user_has_been_created(_conn), do: "user_created"
+      end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end
 
   def __routes__(web_module) do
     module = Module.concat([web_module, Phoenix.Routes])
-    quoted = quote do
-      use Pow.Phoenix.Routes
 
-      def after_sign_in_path(_conn), do: "/after_signed_in"
-      def after_registration_path(_conn), do: "/after_registration"
-    end
+    quoted =
+      quote do
+        use Pow.Phoenix.Routes
+
+        def after_sign_in_path(_conn), do: "/after_signed_in"
+        def after_registration_path(_conn), do: "/after_registration"
+      end
 
     Module.create(module, quoted, Macro.Env.location(__ENV__))
   end

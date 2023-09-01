@@ -18,8 +18,9 @@ defmodule Pow.Phoenix.PlugErrorHandlerTest do
   defp prepare_conn(conn) do
     conn
     |> Conn.put_private(:pow_config, messages_backend: Messages)
-    |> Conn.put_private(:phoenix_flash, %{}) # TODO: Remove when Phoenix 1.7 is required
-    |> Map.update(:assigns, %{}, & Map.put(&1, :flash, %{}))
+    # TODO: Remove when Phoenix 1.7 is required
+    |> Conn.put_private(:phoenix_flash, %{})
+    |> Map.update(:assigns, %{}, &Map.put(&1, :flash, %{}))
     |> Conn.put_private(:phoenix_router, Pow.Test.Phoenix.Router)
     |> Conn.fetch_query_params()
   end

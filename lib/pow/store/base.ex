@@ -137,19 +137,22 @@ defmodule Pow.Store.Base do
         apply(store, method, args)
 
       true ->
-        IO.warn("binary key for backend stores is depecated, update `#{inspect store}` to accept erlang terms instead")
+        IO.warn(
+          "binary key for backend stores is depecated, update `#{inspect(store)}` to accept erlang terms instead"
+        )
 
         case method do
-          :put    -> binary_key_put(store, args)
-          :get    -> binary_key_get(store, args)
+          :put -> binary_key_put(store, args)
+          :get -> binary_key_get(store, args)
           :delete -> binary_key_delete(store, args)
-          :all    -> binary_key_all(store, args)
+          :all -> binary_key_all(store, args)
         end
     end
   end
 
   # TODO: Remove by 1.1.0
   defp has_binary_keys?(store) when store in [EtsCache, MnesiaCache], do: false
+
   defp has_binary_keys?(store) do
     {:module, ^store} = Code.ensure_loaded(store)
 

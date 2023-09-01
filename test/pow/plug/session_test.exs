@@ -33,13 +33,15 @@ defmodule Pow.Plug.SessionTest do
   end
 
   test "call/2 uses existing config with no plug options", %{conn: conn} do
-    assert_raise Pow.Config.ConfigError, "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.", fn ->
-      run_plug(conn, [])
-    end
+    assert_raise Pow.Config.ConfigError,
+                 "Pow configuration not found in connection. Please use a Pow plug that puts the Pow configuration in the plug connection.",
+                 fn ->
+                   run_plug(conn, [])
+                 end
 
     conn =
       conn
-      |> Plug.put_config([a: 1])
+      |> Plug.put_config(a: 1)
       |> run_plug([])
 
     expected_config = [mod: Session, plug: Session] ++ [a: 1]
@@ -57,8 +59,13 @@ defmodule Pow.Plug.SessionTest do
   end
 
   test "call/2 with stored current_user", %{conn: conn} do
-    session_id = store_in_cache("token", {@user, inserted_at: :os.system_time(:millisecond), fingerprint: "fingerprint"})
-    conn       =
+    session_id =
+      store_in_cache(
+        "token",
+        {@user, inserted_at: :os.system_time(:millisecond), fingerprint: "fingerprint"}
+      )
+
+    conn =
       conn
       |> Conn.fetch_session()
       |> Conn.put_session(@default_opts[:session_key], session_id)
@@ -70,7 +77,7 @@ defmodule Pow.Plug.SessionTest do
 
   test "call/2 with stored session and custom metadata", %{conn: conn} do
     inserted_at = :os.system_time(:millisecond)
-    session_id  = store_in_cache("token", {@user, inserted_at: inserted_at, a: 1})
+    session_id = store_in_cache("token", {@user, inserted_at: inserted_at, a: 1})
 
     conn =
       conn
@@ -86,7 +93,7 @@ defmodule Pow.Plug.SessionTest do
 
   test "call/2 with non existing cached key", %{conn: conn} do
     _session_id = store_in_cache("token", {@user, inserted_at: :os.system_time(:millisecond)})
-    invalid_id  = sign_token("invalid")
+    invalid_id = sign_token("invalid")
 
     conn =
       conn
@@ -99,8 +106,13 @@ defmodule Pow.Plug.SessionTest do
 
   test "call/2 with unsigned session id", %{conn: conn} do
     session_id = "token"
-    store_in_cache(session_id, {@user, inserted_at: :os.system_time(:millisecond), fingerprint: "fingerprint"})
-    conn       =
+
+    store_in_cache(
+      session_id,
+      {@user, inserted_at: :os.system_time(:millisecond), fingerprint: "fingerprint"}
+    )
+
+    conn =
       conn
       |> Conn.fetch_session()
       |> Conn.put_session(@default_opts[:session_key], session_id)
@@ -111,12 +123,15 @@ defmodule Pow.Plug.SessionTest do
   end
 
   test "call/2 creates new session when :session_renewal_ttl reached", %{conn: conn} do
-    ttl             = 100
-    config          = Keyword.put(@default_opts, :session_ttl_renewal, ttl)
-    timestamp       = :os.system_time(:millisecond)
+    ttl = 100
+    config = Keyword.put(@default_opts, :session_ttl_renewal, ttl)
+    timestamp = :os.system_time(:millisecond)
     stale_timestamp = timestamp - ttl - 1
-    session_id      = store_in_cache("token", {@user, inserted_at: timestamp, fingerprint: "fingerprint"})
-    init_conn       =
+
+    session_id =
+      store_in_cache("token", {@user, inserted_at: timestamp, fingerprint: "fingerprint"})
+
+    init_conn =
       conn
       |> Conn.fetch_session()
       |> Conn.put_session(config[:session_key], session_id)
@@ -149,7 +164,7 @@ defmodule Pow.Plug.SessionTest do
 
     defdelegate get(config, session_id), to: CredentialsCache
 
-    def delete(config, session_id)do
+    def delete(config, session_id) do
       send(self(), {__MODULE__, :wait})
 
       receive do
@@ -162,14 +177,22 @@ defmodule Pow.Plug.SessionTest do
     end
   end
 
-  test "call/2 creates new session when :session_renewal_ttl reached and doesn't delete with simultanous request", %{conn: conn} do
+  test "call/2 creates new session when :session_renewal_ttl reached and doesn't delete with simultanous request",
+       %{conn: conn} do
     :ets.delete(EtsCacheMock)
     :ets.new(EtsCacheMock, [:ordered_set, :public, :named_table])
 
-    ttl             = 100
-    config          = Keyword.merge(@default_opts, session_ttl_renewal: ttl, credentials_cache_store: {CredentialsCacheWaitDelete, [ttl: :timer.minutes(30), namespace: "credentials"]})
+    ttl = 100
+
+    config =
+      Keyword.merge(@default_opts,
+        session_ttl_renewal: ttl,
+        credentials_cache_store:
+          {CredentialsCacheWaitDelete, [ttl: :timer.minutes(30), namespace: "credentials"]}
+      )
+
     stale_timestamp = :os.system_time(:millisecond) - ttl - 1
-    session_id      = store_in_cache("token", {@user, inserted_at: stale_timestamp})
+    session_id = store_in_cache("token", {@user, inserted_at: stale_timestamp})
 
     conn =
       conn
@@ -178,7 +201,7 @@ defmodule Pow.Plug.SessionTest do
       |> Conn.send_resp(200, "")
       |> recycle_session_conn()
 
-    sid          = Conn.fetch_cookies(conn).cookies["foobar"]
+    sid = Conn.fetch_cookies(conn).cookies["foobar"]
     session_data = Process.get({:session, sid})
 
     CredentialsCache.put(@store_config, session_id, {@user, inserted_at: stale_timestamp})
@@ -236,6 +259,7 @@ defmodule Pow.Plug.SessionTest do
       @default_opts
       |> Keyword.delete(:session_key)
       |> Keyword.put(:otp_app, :test_app)
+
     conn =
       conn
       |> Conn.fetch_session()
@@ -246,11 +270,12 @@ defmodule Pow.Plug.SessionTest do
   end
 
   defmodule ContextMock do
-    def get_by([id: :missing]), do: nil
+    def get_by(id: :missing), do: nil
   end
 
   test "call/2 when user doesn't exist in database and CredentialsCache reloads", %{conn: conn} do
-    session_id = store_in_cache("token", {%User{id: :missing}, inserted_at: :os.system_time(:millisecond)})
+    session_id =
+      store_in_cache("token", {%User{id: :missing}, inserted_at: :os.system_time(:millisecond)})
 
     config =
       @default_opts
@@ -269,10 +294,10 @@ defmodule Pow.Plug.SessionTest do
 
   # TODO: Remove by 1.1.0
   test "backwards compatible", %{conn: conn} do
-    ttl             = 100
-    config          = Keyword.put(@default_opts, :session_ttl_renewal, ttl)
+    ttl = 100
+    config = Keyword.put(@default_opts, :session_ttl_renewal, ttl)
     stale_timestamp = :os.system_time(:millisecond) - ttl - 1
-    session_id      = sign_token("token")
+    session_id = sign_token("token")
 
     @store_config
     |> Keyword.put(:namespace, "credentials")
@@ -340,6 +365,7 @@ defmodule Pow.Plug.SessionTest do
 
     test "creates with custom metadata", %{conn: conn} do
       inserted_at = :os.system_time(:millisecond) - 10
+
       conn =
         conn
         |> Conn.put_private(:pow_session_metadata, inserted_at: inserted_at, a: 1)
@@ -357,6 +383,7 @@ defmodule Pow.Plug.SessionTest do
         @default_opts
         |> Keyword.delete(:session_key)
         |> Keyword.put(:otp_app, :test_app)
+
       conn =
         conn
         |> init_plug(config)
@@ -365,7 +392,10 @@ defmodule Pow.Plug.SessionTest do
       refute get_session_id(conn)
 
       session_id = conn.private[:plug_session]["test_app_auth"]
-      assert {:ok, decoded_session_id} = Plug.verify_token(conn, Atom.to_string(Session), session_id)
+
+      assert {:ok, decoded_session_id} =
+               Plug.verify_token(conn, Atom.to_string(Session), session_id)
+
       assert String.starts_with?(decoded_session_id, "test_app_")
     end
   end
@@ -412,7 +442,7 @@ defmodule Pow.Plug.SessionTest do
     end
 
     test "call/2", %{conn: conn} do
-      timestamp  = :os.system_time(:millisecond)
+      timestamp = :os.system_time(:millisecond)
       session_id = store_in_cache("credentials_cache_test", {@user, inserted_at: timestamp}, [])
 
       conn =
@@ -481,7 +511,8 @@ defmodule Pow.Plug.SessionTest do
   end
 
   defp get_from_cache(token) do
-    assert {:ok, token} = Plug.verify_token(%Conn{}, Atom.to_string(Session), token, @default_opts)
+    assert {:ok, token} =
+             Plug.verify_token(%Conn{}, Atom.to_string(Session), token, @default_opts)
 
     CredentialsCache.get(@store_config, token)
   end

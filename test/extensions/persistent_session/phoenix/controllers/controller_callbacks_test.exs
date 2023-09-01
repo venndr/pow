@@ -12,23 +12,25 @@ defmodule PowPersistentSession.Phoenix.ControllerCallbacksTest do
   describe "Pow.Phoenix.SessionController.create/2" do
     test "generates cookie", %{conn: conn} do
       expected_user = RepoMock.get_by(User, [email: "test@example.com"], [])
-      conn          = post(conn, ~p"/session", %{"user" => @valid_params})
+      conn = post(conn, ~p"/session", %{"user" => @valid_params})
 
       assert session_fingerprint = conn.private[:pow_session_metadata][:fingerprint]
       assert %{max_age: @max_age, path: "/", value: id} = conn.resp_cookies[@cookie_key]
-      assert {^expected_user, session_metadata: [fingerprint: ^session_fingerprint]} = get_from_cache(conn, id)
+
+      assert {^expected_user, session_metadata: [fingerprint: ^session_fingerprint]} =
+               get_from_cache(conn, id)
     end
 
     test "with persistent_session param set to false", %{conn: conn} do
       params = %{"user" => Map.put(@valid_params, "persistent_session", "false")}
-      conn   = post(conn, ~p"/session", params)
+      conn = post(conn, ~p"/session", params)
 
       refute conn.resp_cookies[@cookie_key]
     end
 
     test "with persistent_session param set to true", %{conn: conn} do
       params = %{"user" => Map.put(@valid_params, "persistent_session", "true")}
-      conn   = post(conn, ~p"/session", params)
+      conn = post(conn, ~p"/session", params)
 
       assert conn.resp_cookies[@cookie_key]
     end
@@ -42,7 +44,12 @@ defmodule PowPersistentSession.Phoenix.ControllerCallbacksTest do
 
       conn = delete(conn, ~p"/session")
 
-      assert conn.resp_cookies[@cookie_key] == %{max_age: 0, path: "/", universal_time: {{1970, 1, 1}, {0, 0, 0}}}
+      assert conn.resp_cookies[@cookie_key] == %{
+               max_age: 0,
+               path: "/",
+               universal_time: {{1970, 1, 1}, {0, 0, 0}}
+             }
+
       assert get_from_cache(conn, id) == :not_found
     end
   end

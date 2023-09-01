@@ -27,6 +27,7 @@ defmodule PowPersistentSession.Store.PersistentSessionCache do
   defp convert_old_value(clauses) when is_list(clauses), do: {clauses, []}
 
   defp reload(:not_found, _config), do: :not_found
+
   defp reload(value, config) do
     case Keyword.has_key?(config, :pow_config) do
       true ->
@@ -34,7 +35,9 @@ defmodule PowPersistentSession.Store.PersistentSessionCache do
 
       # TODO: Remove by 1.1.0
       false ->
-        IO.warn("#{inspect __MODULE__}.get/2 call without `:pow_config` in second argument is deprecated, find the migration step in the changelog.")
+        IO.warn(
+          "#{inspect(__MODULE__)}.get/2 call without `:pow_config` in second argument is deprecated, find the migration step in the changelog."
+        )
 
         value
     end
@@ -45,18 +48,22 @@ defmodule PowPersistentSession.Store.PersistentSessionCache do
     pow_config = fetch_pow_config!(config)
 
     case Operations.get_by(clauses, pow_config) do
-      nil  -> nil
+      nil -> nil
       user -> {user, metadata}
     end
   end
+
   defp do_reload({user, metadata}, config) do
     pow_config = fetch_pow_config!(config)
 
     case Operations.reload(user, pow_config) do
-      nil  -> nil
+      nil -> nil
       user -> {user, metadata}
     end
   end
 
-  defp fetch_pow_config!(config), do: Keyword.get(config, :pow_config) || raise "No `:pow_config` value found in the store config."
+  defp fetch_pow_config!(config),
+    do:
+      Keyword.get(config, :pow_config) ||
+        raise("No `:pow_config` value found in the store config.")
 end
